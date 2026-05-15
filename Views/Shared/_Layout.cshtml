@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - QLTTYKPH</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        :root { --sidebar-width: 260px; --primary: #1a5f9e; --sidebar-bg: #1a2942; }
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+        #sidebar { width: var(--sidebar-width); min-height: 100vh; background: var(--sidebar-bg); position: fixed; top: 0; left: 0; z-index: 1000; transition: all .3s; }
+        #sidebar .sidebar-header { padding: 20px 16px; background: rgba(0,0,0,.2); }
+        #sidebar .sidebar-header h5 { color: #fff; margin: 0; font-weight: 700; font-size: .95rem; }
+        #sidebar .sidebar-header small { color: #adb5bd; }
+        #sidebar ul.nav-items { padding: 12px 0; list-style: none; margin: 0; }
+        #sidebar ul.nav-items .nav-section { color: #6c757d; font-size: .7rem; text-transform: uppercase; letter-spacing: 1px; padding: 12px 20px 4px; font-weight: 600; }
+        #sidebar ul.nav-items a { display: flex; align-items: center; padding: 10px 20px; color: #ced4da; text-decoration: none; transition: all .2s; border-left: 3px solid transparent; }
+        #sidebar ul.nav-items a:hover, #sidebar ul.nav-items a.active { background: rgba(255,255,255,.08); color: #fff; border-left-color: #4db6f5; }
+        #sidebar ul.nav-items a i { width: 22px; margin-right: 10px; font-size: 1rem; }
+        #content { margin-left: var(--sidebar-width); min-height: 100vh; display: flex; flex-direction: column; }
+        .topbar { background: #fff; padding: 12px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.1); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .topbar .page-title { font-weight: 600; color: #343a40; margin: 0; font-size: 1.1rem; }
+        .main-content { padding: 24px; flex: 1; }
+        .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,.07); border-radius: 10px; }
+        .card-header { border-radius: 10px 10px 0 0 !important; font-weight: 600; }
+        .stat-card { border-radius: 12px; color: #fff; padding: 20px; }
+        .stat-card .stat-icon { font-size: 2rem; opacity: .8; }
+        .stat-card .stat-value { font-size: 2rem; font-weight: 700; }
+        .stat-card .stat-label { opacity: .85; font-size: .9rem; }
+        .badge-new { background: #dc3545; }
+        .badge-processing { background: #fd7e14; }
+        .badge-completed { background: #198754; }
+        .table-hover tbody tr:hover { background: #f8f9ff; }
+        footer.site-footer { background: var(--sidebar-bg); color: #6c757d; padding: 12px 24px; font-size: .82rem; text-align: center; margin-left: var(--sidebar-width); }
+        .alert { border-radius: 8px; }
+        @@media (max-width: 768px) {
+            #sidebar { width: 0; overflow: hidden; }
+            #content, footer.site-footer { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+@{
+    var role = Context.Session.GetString("UserRole");
+    var fullName = Context.Session.GetString("UserFullName");
+    var isLoggedIn = Context.Session.GetInt32("UserId").HasValue;
+}
+
+@if (isLoggedIn)
+{
+<div id="sidebar">
+    <div class="sidebar-header">
+        <h5><i class="bi bi-clipboard2-pulse-fill me-2"></i>QLTTYKPH</h5>
+        <small>Quản lý ý kiến phản hồi</small>
+    </div>
+    <ul class="nav-items">
+        <li><span class="nav-section">Tổng quan</span></li>
+        <li><a asp-controller="Home" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"><i class="bi bi-speedometer2"></i> Trang chủ</a></li>
+
+        @if (role == "Admin" || role == "Staff")
+        {
+            <li><span class="nav-section">Khảo sát</span></li>
+            <li><a asp-controller="Survey" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Survey" ? "active" : "")"><i class="bi bi-journal-text"></i> Quản lý khảo sát</a></li>
+            <li><span class="nav-section">Phản hồi</span></li>
+            <li><a asp-controller="Feedback" asp-action="All" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Feedback" && ViewContext.RouteData.Values["action"]?.ToString() == "All" ? "active" : "")"><i class="bi bi-chat-left-text"></i> Tất cả phản hồi</a></li>
+            <li><span class="nav-section">Báo cáo</span></li>
+            <li><a asp-controller="Report" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" ? "active" : "")"><i class="bi bi-bar-chart-line"></i> Thống kê & Báo cáo</a></li>
+        }
+
+        @if (role == "Admin")
+        {
+            <li><span class="nav-section">Quản trị</span></li>
+            <li><a asp-controller="Admin" asp-action="Users" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : "")"><i class="bi bi-people"></i> Tài khoản</a></li>
+            <li><a asp-controller="Admin" asp-action="Categories" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Categories" ? "active" : "")"><i class="bi bi-tags"></i> Danh mục</a></li>
+            <li><a asp-controller="Admin" asp-action="Departments" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Departments" ? "active" : "")"><i class="bi bi-building"></i> Phòng ban</a></li>
+        }
+
+        @if (role == "Student")
+        {
+            <li><span class="nav-section">Khảo sát</span></li>
+            <li><a asp-controller="Feedback" asp-action="OpenSurveys" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "OpenSurveys" ? "active" : "")"><i class="bi bi-clipboard-check"></i> Khảo sát đang mở</a></li>
+            <li><a asp-controller="Feedback" asp-action="MyFeedbacks" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "MyFeedbacks" ? "active" : "")"><i class="bi bi-clock-history"></i> Phản hồi của tôi</a></li>
+        }
+
+        <li><span class="nav-section">Tài khoản</span></li>
+        <li><a asp-controller="Account" asp-action="ChangePassword"><i class="bi bi-key"></i> Đổi mật khẩu</a></li>
+        <li><a asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-left"></i> Đăng xuất</a></li>
+    </ul>
+</div>
+}
+
+<div id="content">
+    <div class="topbar">
+        <h6 class="page-title">@(ViewData["Title"] ?? "Hệ thống QLTTYKPH")</h6>
+        @if (isLoggedIn)
+        {
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge @(role == "Admin" ? "bg-danger" : role == "Staff" ? "bg-primary" : "bg-success")">
+                    @(role == "Admin" ? "Quản trị viên" : role == "Staff" ? "Nhân viên" : "Sinh viên")
+                </span>
+                <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>@fullName</span>
+            </div>
+        }
+    </div>
+
+    <div class="main-content">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @RenderBody()
+    </div>
+</div>
+
+<footer class="site-footer">
+    &copy; 2026 Hệ thống Quản lý Tiếp nhận và Xử lý Ý kiến Phản hồi (QLTTYKPH)
+</footer>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

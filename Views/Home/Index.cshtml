@@ -1,0 +1,143 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ";
+    var role = Context.Session.GetString("UserRole");
+    var fullName = Context.Session.GetString("UserFullName");
+}
+
+<div class="mb-4">
+    <h5 class="fw-bold text-dark">Xin chào, @fullName! 👋</h5>
+    <p class="text-muted">Chào mừng bạn đến với hệ thống Quản lý Tiếp nhận và Xử lý Ý kiến Phản hồi.</p>
+</div>
+
+@if (role == "Admin" || role == "Staff")
+{
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#1a5f9e,#4db6f5)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">@ViewBag.TotalSurveys</div>
+                    <div class="stat-label">Tổng khảo sát</div>
+                </div>
+                <i class="bi bi-journal-text stat-icon"></i>
+            </div>
+            <div class="mt-2 small opacity-75">@ViewBag.PublishedSurveys đang xuất bản</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#e53935,#ef9a9a)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">@ViewBag.TotalFeedbacks</div>
+                    <div class="stat-label">Tổng phản hồi</div>
+                </div>
+                <i class="bi bi-chat-left-text stat-icon"></i>
+            </div>
+            <div class="mt-2 small opacity-75">@ViewBag.NewFeedbacks mới chưa xử lý</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#2e7d32,#66bb6a)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">@ViewBag.PublishedSurveys</div>
+                    <div class="stat-label">Khảo sát đang mở</div>
+                </div>
+                <i class="bi bi-unlock stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#6a1b9a,#ba68c8)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">@ViewBag.TotalUsers</div>
+                    <div class="stat-label">Người dùng</div>
+                </div>
+                <i class="bi bi-people stat-icon"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-lightning-charge me-2"></i>Truy cập nhanh</span>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-controller="Survey" asp-action="Create" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-plus-circle me-2"></i>Tạo khảo sát mới
+                    </a>
+                    <a asp-controller="Feedback" asp-action="All" class="btn btn-outline-danger text-start">
+                        <i class="bi bi-inbox me-2"></i>Xem phản hồi mới
+                    </a>
+                    <a asp-controller="Report" asp-action="Index" class="btn btn-outline-success text-start">
+                        <i class="bi bi-bar-chart me-2"></i>Xem báo cáo thống kê
+                    </a>
+                    @if (role == "Admin")
+                    {
+                        <a asp-controller="Admin" asp-action="Users" class="btn btn-outline-secondary text-start">
+                            <i class="bi bi-people me-2"></i>Quản lý tài khoản
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-info-circle me-2"></i>Hướng dẫn sử dụng</span>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    @if (role == "Admin")
+                    {
+                        <li class="mb-2"><i class="bi bi-1-circle-fill text-primary me-2"></i>Vào <strong>Quản trị</strong> để tạo tài khoản sinh viên, nhân viên</li>
+                        <li class="mb-2"><i class="bi bi-2-circle-fill text-primary me-2"></i>Tạo <strong>Danh mục</strong> và <strong>Phòng ban</strong></li>
+                        <li class="mb-2"><i class="bi bi-3-circle-fill text-primary me-2"></i>Tạo <strong>Khảo sát</strong> và thêm câu hỏi</li>
+                        <li class="mb-2"><i class="bi bi-4-circle-fill text-primary me-2"></i><strong>Xuất bản</strong> khảo sát để sinh viên thực hiện</li>
+                    }
+                    else
+                    {
+                        <li class="mb-2"><i class="bi bi-1-circle-fill text-primary me-2"></i>Vào <strong>Quản lý khảo sát</strong> để tạo đợt khảo sát</li>
+                        <li class="mb-2"><i class="bi bi-2-circle-fill text-primary me-2"></i>Thêm câu hỏi và <strong>Xuất bản</strong></li>
+                        <li class="mb-2"><i class="bi bi-3-circle-fill text-primary me-2"></i>Xem và xử lý <strong>Phản hồi</strong> từ sinh viên</li>
+                        <li class="mb-2"><i class="bi bi-4-circle-fill text-primary me-2"></i>Xuất <strong>Báo cáo Excel</strong> khi cần</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+}
+else
+{
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card" style="border-left: 4px solid #1a5f9e;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-clipboard-check text-primary me-2"></i>Thực hiện khảo sát</h5>
+                <p class="card-text text-muted">Xem danh sách khảo sát đang mở và gửi phản hồi của bạn.</p>
+                <a asp-controller="Feedback" asp-action="OpenSurveys" class="btn btn-primary">
+                    <i class="bi bi-arrow-right me-1"></i>Xem ngay
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card" style="border-left: 4px solid #198754;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-clock-history text-success me-2"></i>Phản hồi của tôi</h5>
+                <p class="card-text text-muted">Xem lại các phản hồi bạn đã gửi và trạng thái xử lý.</p>
+                <a asp-controller="Feedback" asp-action="MyFeedbacks" class="btn btn-success">
+                    <i class="bi bi-arrow-right me-1"></i>Xem lịch sử
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+}

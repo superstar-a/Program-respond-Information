@@ -1,0 +1,113 @@
+@model QLTTYKPH.Models.Survey
+@{
+    ViewData["Title"] = "Chi tiết khảo sát";
+}
+<div class="mb-3">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-text me-2"></i>@Model.Title</span>
+                @if (Model.IsPublished)
+                {
+                    <span class="badge bg-success"><i class="bi bi-unlock me-1"></i>Đang mở</span>
+                }
+                else
+                {
+                    <span class="badge bg-light text-dark"><i class="bi bi-lock me-1"></i>Đã đóng</span>
+                }
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="text-muted">@Model.Description</p>
+                }
+                <div class="row g-3 small">
+                    <div class="col-sm-6">
+                        <span class="text-muted">Danh mục:</span>
+                        <span class="badge bg-info text-dark ms-1">@(Model.Category?.Name ?? "Chưa phân loại")</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-muted">Phòng ban:</span>
+                        <strong class="ms-1">@(Model.Department?.Name ?? "Chưa có")</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-muted">Lớp mục tiêu:</span>
+                        <strong class="ms-1">@(string.IsNullOrEmpty(Model.ClassTarget) ? "Tất cả" : Model.ClassTarget)</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-muted">Số phản hồi:</span>
+                        <strong class="ms-1">@Model.Feedbacks.Count</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-check me-2"></i>Câu hỏi (@Model.Questions.Count)</span>
+                <a asp-action="Questions" asp-route-surveyId="@Model.Id" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Quản lý câu hỏi
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @{int i = 1;}
+                    @foreach (var q in Model.Questions)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-start">
+                                <span class="badge bg-primary me-3 mt-1">@i++</span>
+                                <div>
+                                    <div class="fw-semibold">@q.Text</div>
+                                    <small class="text-muted">
+                                        @switch (q.Type)
+                                        {
+                                            case QLTTYKPH.Models.QuestionType.Text: <text>Văn bản tự do</text> break;
+                                            case QLTTYKPH.Models.QuestionType.SingleChoice: <text>Chọn một đáp án</text> break;
+                                            case QLTTYKPH.Models.QuestionType.MultipleChoice: <text>Chọn nhiều đáp án</text> break;
+                                            case QLTTYKPH.Models.QuestionType.Rating: <text>Đánh giá (1-5)</text> break;
+                                        }
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (!Model.Questions.Any())
+                    {
+                        <div class="list-group-item text-center text-muted py-3">Chưa có câu hỏi nào</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-gear me-2"></i>Thao tác</div>
+            <div class="card-body d-grid gap-2">
+                <form asp-action="TogglePublish" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn w-100 @(Model.IsPublished ? "btn-outline-secondary" : "btn-success")">
+                        <i class="bi @(Model.IsPublished ? "bi-lock" : "bi-unlock") me-1"></i>
+                        @(Model.IsPublished ? "Đóng khảo sát" : "Xuất bản khảo sát")
+                    </button>
+                </form>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-warning">
+                    <i class="bi bi-pencil me-1"></i>Chỉnh sửa
+                </a>
+                <a asp-controller="Feedback" asp-action="All" asp-route-surveyId="@Model.Id" class="btn btn-outline-primary">
+                    <i class="bi bi-chat-left-text me-1"></i>Xem phản hồi (@Model.Feedbacks.Count)
+                </a>
+                <a asp-controller="Report" asp-action="ExportExcel" asp-route-surveyId="@Model.Id" class="btn btn-outline-success">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Xuất Excel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

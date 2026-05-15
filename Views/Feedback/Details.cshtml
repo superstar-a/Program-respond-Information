@@ -1,0 +1,123 @@
+@model QLTTYKPH.Models.Feedback
+@{
+    ViewData["Title"] = "Chi tiết & Xử lý phản hồi";
+}
+<div class="mb-3 d-flex gap-2">
+    <a asp-action="All" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+    <a asp-controller="Report" asp-action="ExportExcel" asp-route-surveyId="@Model.SurveyId" class="btn btn-sm btn-outline-success">
+        <i class="bi bi-file-earmark-excel me-1"></i>Xuất Excel khảo sát này
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <span><i class="bi bi-person-circle me-2"></i>@Model.User?.FullName (@(Model.User?.Class ?? "-"))</span>
+                @switch (Model.Status)
+                {
+                    case QLTTYKPH.Models.FeedbackStatus.New:
+                        <span class="badge bg-danger">Mới</span>
+                        break;
+                    case QLTTYKPH.Models.FeedbackStatus.Processing:
+                        <span class="badge bg-warning text-dark">Đang xử lý</span>
+                        break;
+                    case QLTTYKPH.Models.FeedbackStatus.Completed:
+                        <span class="badge bg-success">Hoàn thành</span>
+                        break;
+                }
+            </div>
+            <div class="card-body small">
+                <span class="text-muted">Khảo sát:</span> <strong>@Model.Survey?.Title</strong> &nbsp;|&nbsp;
+                <span class="text-muted">Gửi lúc:</span> <strong>@Model.SubmittedAt?.ToString("dd/MM/yyyy HH:mm")</strong>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold"><i class="bi bi-list-check me-2"></i>Nội dung phản hồi</div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @{int i = 1;}
+                    @foreach (var ans in Model.FeedbackAnswers.OrderBy(a => a.QuestionId))
+                    {
+                        <div class="list-group-item">
+                            <div class="small text-muted mb-1">Câu @i++: @ans.Question?.Text</div>
+                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(ans.AnswerText) ? "-" : ans.AnswerText)</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2"></i>Lịch sử xử lý (@Model.ProcessingRecords.Count)</span>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.ProcessingRecords.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var pr in Model.ProcessingRecords.OrderBy(p => p.CreatedAt))
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-semibold">@pr.Action</div>
+                                        <small class="text-muted">
+                                            <i class="bi bi-person me-1"></i>@pr.HandlerUser?.FullName
+                                            &nbsp;–&nbsp;
+                                            <i class="bi bi-clock me-1"></i>@pr.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                    </div>
+                                    <form asp-controller="Processing" asp-action="DeleteRecord" asp-route-id="@pr.Id" method="post"
+                                          onsubmit="return confirm('Xóa bản ghi này?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger ms-2">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="p-3 text-muted small text-center">Chưa có bản ghi xử lý</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark fw-semibold">
+                <i class="bi bi-pencil-square me-2"></i>Thêm bản ghi xử lý
+            </div>
+            <div class="card-body">
+                <form asp-controller="Processing" asp-action="AddRecord" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="feedbackId" value="@Model.Id" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Nội dung xử lý</label>
+                        <textarea name="action" class="form-control" rows="3"
+                                  placeholder="Mô tả hành động xử lý, kết quả, ghi chú..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Cập nhật trạng thái</label>
+                        <select name="newStatus" class="form-select">
+                            <option value="New" selected="@(Model.Status == QLTTYKPH.Models.FeedbackStatus.New)">Mới</option>
+                            <option value="Processing" selected="@(Model.Status == QLTTYKPH.Models.FeedbackStatus.Processing)">Đang xử lý</option>
+                            <option value="Completed" selected="@(Model.Status == QLTTYKPH.Models.FeedbackStatus.Completed)">Hoàn thành</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-warning text-dark w-100">
+                        <i class="bi bi-check-circle me-1"></i>Lưu xử lý
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,94 @@
+@model QLTTYKPH.Models.Feedback
+@{
+    ViewData["Title"] = "Chi tiết phản hồi";
+}
+<div class="mb-3">
+    <a asp-action="MyFeedbacks" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>@Model.Survey?.Title</h6>
+    </div>
+    <div class="card-body small">
+        <div class="row g-2">
+            <div class="col-sm-6">
+                <span class="text-muted">Thời gian gửi:</span>
+                <strong class="ms-1">@Model.SubmittedAt?.ToString("dd/MM/yyyy HH:mm")</strong>
+            </div>
+            <div class="col-sm-6">
+                <span class="text-muted">Trạng thái:</span>
+                @switch (Model.Status)
+                {
+                    case QLTTYKPH.Models.FeedbackStatus.New:
+                        <span class="badge bg-secondary ms-1">Đã gửi</span>
+                        break;
+                    case QLTTYKPH.Models.FeedbackStatus.Processing:
+                        <span class="badge bg-warning text-dark ms-1">Đang xử lý</span>
+                        break;
+                    case QLTTYKPH.Models.FeedbackStatus.Completed:
+                        <span class="badge bg-success ms-1">Đã hoàn thành</span>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header fw-semibold"><i class="bi bi-list-check me-2"></i>Câu trả lời của bạn</div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            @{int i = 1;}
+            @foreach (var ans in Model.FeedbackAnswers.OrderBy(a => a.QuestionId))
+            {
+                <div class="list-group-item">
+                    <div class="small text-muted mb-1">Câu @i++: @ans.Question?.Text</div>
+                    <div class="fw-semibold">
+                        @(string.IsNullOrWhiteSpace(ans.AnswerText) ? "-" : ans.AnswerText)
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (Model.ProcessingRecords != null && Model.ProcessingRecords.Any())
+{
+    <div class="card">
+        <div class="card-header fw-semibold bg-success text-white">
+            <i class="bi bi-chat-left-text me-2"></i>Phản hồi từ nhà trường
+        </div>
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                @foreach (var record in Model.ProcessingRecords.OrderBy(r => r.CreatedAt))
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-semibold"><i class="bi bi-person-badge me-1"></i>@record.HandlerUser?.FullName</span>
+                            <span class="small text-muted">@record.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div>@record.Action</div>
+                        @if (!string.IsNullOrWhiteSpace(record.Note))
+                        {
+                            <div class="small text-muted mt-1"><i class="bi bi-sticky me-1"></i>@record.Note</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-header fw-semibold bg-success text-white">
+            <i class="bi bi-chat-left-text me-2"></i>Phản hồi từ nhà trường
+        </div>
+        <div class="card-body text-muted text-center py-3">
+            <i class="bi bi-hourglass-split me-1"></i>Chưa có phản hồi từ nhà trường.
+        </div>
+    </div>
+}

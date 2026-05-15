@@ -1,0 +1,76 @@
+@model QLTTYKPH.Models.Survey
+@{
+    ViewData["Title"] = "Quản lý câu hỏi";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <span class="fw-bold">Câu hỏi: <span class="text-primary">@Model.Title</span></span>
+    </div>
+    <a asp-action="AddQuestion" asp-route-surveyId="@Model.Id" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Thêm câu hỏi
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            @{int i = 1;}
+            @foreach (var q in Model.Questions)
+            {
+                <div class="list-group-item d-flex align-items-start justify-content-between">
+                    <div class="d-flex align-items-start">
+                        <span class="badge bg-primary me-3 mt-1 flex-shrink-0">@i++</span>
+                        <div>
+                            <div class="fw-semibold">@q.Text</div>
+                            <div class="mt-1">
+                                @switch (q.Type)
+                                {
+                                    case QLTTYKPH.Models.QuestionType.Text:
+                                        <span class="badge bg-light text-dark border"><i class="bi bi-input-cursor-text me-1"></i>Văn bản</span>
+                                        break;
+                                    case QLTTYKPH.Models.QuestionType.SingleChoice:
+                                        <span class="badge bg-light text-dark border"><i class="bi bi-record-circle me-1"></i>Chọn một</span>
+                                        break;
+                                    case QLTTYKPH.Models.QuestionType.MultipleChoice:
+                                        <span class="badge bg-light text-dark border"><i class="bi bi-check2-square me-1"></i>Chọn nhiều</span>
+                                        break;
+                                    case QLTTYKPH.Models.QuestionType.Rating:
+                                        <span class="badge bg-light text-dark border"><i class="bi bi-star me-1"></i>Đánh giá 1-5</span>
+                                        break;
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(q.Options))
+                            {
+                                <div class="mt-1 small text-muted">
+                                    Lựa chọn: @string.Join(" | ", q.Options.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(o => o.Trim()))
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="d-flex gap-1 ms-3">
+                        <a asp-action="EditQuestion" asp-route-id="@q.Id" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form asp-action="DeleteQuestion" asp-route-id="@q.Id" method="post"
+                              onsubmit="return confirm('Xóa câu hỏi này?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+            @if (!Model.Questions.Any())
+            {
+                <div class="list-group-item text-center text-muted py-5">
+                    <i class="bi bi-question-circle fs-2 d-block mb-2"></i>
+                    Chưa có câu hỏi nào. Nhấn "Thêm câu hỏi" để bắt đầu.
+                </div>
+            }
+        </div>
+    </div>
+</div>

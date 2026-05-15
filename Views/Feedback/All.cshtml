@@ -1,0 +1,94 @@
+@model IEnumerable<QLTTYKPH.Models.Feedback>
+@{
+    ViewData["Title"] = "Tất cả phản hồi";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-chat-left-text me-2 text-primary"></i>Tất cả phản hồi</h5>
+    <a asp-controller="Report" asp-action="ExportExcel" class="btn btn-success btn-sm">
+        <i class="bi bi-file-earmark-excel me-1"></i>Xuất Excel tổng hợp
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <select name="surveyId" class="form-select form-select-sm">
+                    <option value="">-- Tất cả khảo sát --</option>
+                    @foreach (var s in (List<QLTTYKPH.Models.Survey>)ViewBag.Surveys)
+                    {
+                        <option value="@s.Id" selected="@(ViewBag.SurveyId != null && ViewBag.SurveyId.ToString() == s.Id.ToString())">@s.Title</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">-- Trạng thái --</option>
+                    <option value="New" selected="@(ViewBag.Status == "New")">Mới</option>
+                    <option value="Processing" selected="@(ViewBag.Status == "Processing")">Đang xử lý</option>
+                    <option value="Completed" selected="@(ViewBag.Status == "Completed")">Hoàn thành</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Lọc</button>
+                <a asp-action="All" class="btn btn-sm btn-outline-secondary ms-1">Xóa lọc</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Sinh viên</th>
+                        <th>Lớp</th>
+                        <th>Khảo sát</th>
+                        <th>Thời gian</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int stt = 1;}
+                    @foreach (var f in Model)
+                    {
+                        <tr>
+                            <td class="text-muted small">@stt++</td>
+                            <td><strong>@f.User?.FullName</strong></td>
+                            <td class="small text-muted">@(f.User?.Class ?? "-")</td>
+                            <td class="small">@f.Survey?.Title</td>
+                            <td class="small text-muted">@f.SubmittedAt?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-center">
+                                @switch (f.Status)
+                                {
+                                    case QLTTYKPH.Models.FeedbackStatus.New:
+                                        <span class="badge bg-danger">Mới</span>
+                                        break;
+                                    case QLTTYKPH.Models.FeedbackStatus.Processing:
+                                        <span class="badge bg-warning text-dark">Đang xử lý</span>
+                                        break;
+                                    case QLTTYKPH.Models.FeedbackStatus.Completed:
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-center">
+                                <a asp-action="Details" asp-route-id="@f.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>Xử lý
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">Chưa có phản hồi nào</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

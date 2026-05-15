@@ -1,0 +1,74 @@
+@model QLTTYKPH.Models.Survey
+@{
+    ViewData["Title"] = "Chi tiết báo cáo khảo sát";
+}
+<div class="mb-3 d-flex gap-2">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Quay lại</a>
+    <a asp-action="ExportExcel" asp-route-surveyId="@Model.Id" class="btn btn-sm btn-success">
+        <i class="bi bi-file-earmark-excel me-1"></i>Xuất Excel
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-journal-text me-2"></i>@Model.Title</h6>
+    </div>
+    <div class="card-body small">
+        <span class="text-muted">Danh mục:</span> <strong>@(Model.Category?.Name ?? "-")</strong> &nbsp;|&nbsp;
+        <span class="text-muted">Phòng ban:</span> <strong>@(Model.Department?.Name ?? "-")</strong> &nbsp;|&nbsp;
+        <span class="text-muted">Số phản hồi:</span> <strong>@Model.Feedbacks.Count</strong>
+    </div>
+</div>
+
+@foreach (var q in Model.Questions)
+{
+    var answers = Model.Feedbacks.SelectMany(f => f.FeedbackAnswers)
+                       .Where(a => a.QuestionId == q.Id && !string.IsNullOrWhiteSpace(a.AnswerText))
+                       .ToList();
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">
+            <i class="bi bi-question-circle me-2 text-primary"></i>@q.Text
+        </div>
+        <div class="card-body">
+            @if (q.Type == QLTTYKPH.Models.QuestionType.Text)
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var a in answers.Take(20))
+                    {
+                        <li class="list-group-item small px-0">@a.AnswerText</li>
+                    }
+                    @if (!answers.Any())
+                    {
+                        <li class="list-group-item text-muted small px-0">Chưa có câu trả lời</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                var grouped = answers.GroupBy(a => a.AnswerText).OrderByDescending(g => g.Count());
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr><th>Lựa chọn</th><th class="text-center">Số lượt</th><th>Tỉ lệ</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var g in grouped)
+                        {
+                            int pct = answers.Count > 0 ? (int)(g.Count() * 100.0 / answers.Count) : 0;
+                            <tr>
+                                <td>@g.Key</td>
+                                <td class="text-center">@g.Count()</td>
+                                <td style="min-width:120px">
+                                    <div class="progress" style="height:8px">
+                                        <div class="progress-bar" style="width:@pct%"></div>
+                                    </div>
+                                    <small class="text-muted">@pct%</small>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+}

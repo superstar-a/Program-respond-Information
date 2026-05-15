@@ -1,0 +1,85 @@
+@model IEnumerable<QLTTYKPH.Models.User>
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-people me-2 text-primary"></i>Quản lý tài khoản</h5>
+    <a asp-action="CreateUser" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Thêm tài khoản
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <input type="text" name="search" value="@ViewBag.Search" class="form-control form-control-sm" placeholder="Tìm kiếm theo tên, username..." />
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Tìm</button>
+                <a asp-action="Users" class="btn btn-sm btn-outline-secondary ms-1">Xóa lọc</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Tên đăng nhập</th>
+                        <th>Họ và tên</th>
+                        <th>Vai trò</th>
+                        <th>Lớp</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int stt = 1;}
+                    @foreach (var u in Model)
+                    {
+                        <tr>
+                            <td class="text-muted small">@stt++</td>
+                            <td><strong>@u.Username</strong></td>
+                            <td>@u.FullName</td>
+                            <td>
+                                @switch (u.Role)
+                                {
+                                    case QLTTYKPH.Models.UserRole.Admin:
+                                        <span class="badge bg-danger">Quản trị viên</span>
+                                        break;
+                                    case QLTTYKPH.Models.UserRole.Staff:
+                                        <span class="badge bg-primary">Nhân viên</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-success">Sinh viên</span>
+                                        break;
+                                }
+                            </td>
+                            <td>@(u.Class ?? "-")</td>
+                            <td class="text-center">
+                                <a asp-action="EditUser" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="DeleteUser" asp-route-id="@u.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Xác nhận xóa tài khoản @u.Username?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-4">Không có tài khoản nào</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

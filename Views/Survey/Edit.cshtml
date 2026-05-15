@@ -1,0 +1,88 @@
+@model QLTTYKPH.Models.Survey
+@{
+    ViewData["Title"] = "Sửa khảo sát";
+}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <i class="bi bi-pencil-square me-2"></i>Sửa khảo sát
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold"></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label fw-semibold"></label>
+                            <select asp-for="CategoryId" class="form-select">
+                                <option value="">-- Chọn danh mục --</option>
+                                @foreach (var c in (List<QLTTYKPH.Models.Category>)ViewBag.Categories)
+                                {
+                                    <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">@c.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DepartmentId" class="form-label fw-semibold"></label>
+                            <select asp-for="DepartmentId" class="form-select">
+                                <option value="">-- Chọn phòng ban --</option>
+                                @foreach (var d in (List<QLTTYKPH.Models.Department>)ViewBag.Departments)
+                                {
+                                    <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@d.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="ClassTarget" class="form-label fw-semibold"></label>
+                        <select id="ClassTarget" name="ClassTarget" class="form-select select2-class" style="width:100%">
+                            <option value="" selected="@(string.IsNullOrEmpty(Model.ClassTarget))">Tất cả các lớp</option>
+                            @foreach (var cls in (List<string>)ViewBag.Classes)
+                            {
+                                <option value="@cls" selected="@(Model.ClassTarget == cls)">@cls</option>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.ClassTarget) && !((List<string>)ViewBag.Classes).Contains(Model.ClassTarget))
+                            {
+                                <option value="@Model.ClassTarget" selected="true">@Model.ClassTarget</option>
+                            }
+                        </select>
+                        <div class="form-text">Chọn lớp mục tiêu hoặc nhập tên lớp mới. Để trống = tất cả sinh viên</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-warning text-dark">
+                            <i class="bi bi-check-circle me-1"></i>Lưu thay đổi
+                        </button>
+                        <a asp-action="Questions" asp-route-surveyId="@Model.Id" class="btn btn-outline-info">
+                            <i class="bi bi-list-check me-1"></i>Quản lý câu hỏi
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.select2-class').select2({
+                theme: 'bootstrap-5',
+                tags: true,
+                language: { noResults: function () { return 'Nhập tên lớp mới rồi nhấn Enter'; } }
+            });
+        });
+    </script>
+}

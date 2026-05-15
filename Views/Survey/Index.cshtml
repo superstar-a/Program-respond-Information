@@ -1,0 +1,120 @@
+@model IEnumerable<QLTTYKPH.Models.Survey>
+@{
+    ViewData["Title"] = "Quản lý khảo sát";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0"><i class="bi bi-journal-text me-2 text-primary"></i>Danh sách khảo sát</h5>
+    <a asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Tạo khảo sát mới
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" name="search" value="@ViewBag.Search" class="form-control form-control-sm" placeholder="Tìm tiêu đề..." />
+            </div>
+            <div class="col-md-2">
+                <select name="categoryId" class="form-select form-select-sm">
+                    <option value="">-- Danh mục --</option>
+                    @foreach (var c in (List<QLTTYKPH.Models.Category>)ViewBag.Categories)
+                    {
+                        <option value="@c.Id" selected="@(ViewBag.CategoryId != null && ViewBag.CategoryId.ToString() == c.Id.ToString())">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="departmentId" class="form-select form-select-sm">
+                    <option value="">-- Phòng ban --</option>
+                    @foreach (var d in (List<QLTTYKPH.Models.Department>)ViewBag.Departments)
+                    {
+                        <option value="@d.Id" selected="@(ViewBag.DepartmentId != null && ViewBag.DepartmentId.ToString() == d.Id.ToString())">@d.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="isPublished" class="form-select form-select-sm">
+                    <option value="">-- Trạng thái --</option>
+                    <option value="true" selected="@(ViewBag.IsPublished != null && ViewBag.IsPublished.ToString() == "True")">Đang mở</option>
+                    <option value="false" selected="@(ViewBag.IsPublished != null && ViewBag.IsPublished.ToString() == "False")">Đã đóng</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Lọc</button>
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-1">Xóa lọc</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Tiêu đề</th>
+                        <th>Danh mục</th>
+                        <th>Phòng ban</th>
+                        <th>Lớp mục tiêu</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int stt = 1;}
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td class="text-muted small">@stt++</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@s.Id" class="fw-semibold text-decoration-none">@s.Title</a>
+                            </td>
+                            <td><span class="badge bg-info text-dark">@(s.Category?.Name ?? "-")</span></td>
+                            <td class="small text-muted">@(s.Department?.Name ?? "-")</td>
+                            <td class="small">@(string.IsNullOrEmpty(s.ClassTarget) ? "Tất cả" : s.ClassTarget)</td>
+                            <td class="text-center">
+                                @if (s.IsPublished)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-unlock me-1"></i>Đang mở</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary"><i class="bi bi-lock me-1"></i>Đã đóng</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <form asp-action="TogglePublish" asp-route-id="@s.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm @(s.IsPublished ? "btn-outline-secondary" : "btn-outline-success") me-1"
+                                            title="@(s.IsPublished ? "Đóng khảo sát" : "Xuất bản")">
+                                        <i class="bi @(s.IsPublished ? "bi-lock" : "bi-unlock")"></i>
+                                    </button>
+                                </form>
+                                <a asp-action="Questions" asp-route-surveyId="@s.Id" class="btn btn-sm btn-outline-info me-1" title="Câu hỏi">
+                                    <i class="bi bi-list-check"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-sm btn-outline-primary me-1" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@s.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Xóa khảo sát này? Tất cả dữ liệu liên quan sẽ bị xóa!')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="7" class="text-center text-muted py-4">Chưa có khảo sát nào</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

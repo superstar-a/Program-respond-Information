@@ -1,0 +1,58 @@
+@model QLTTYKPH.Models.Question
+@{
+    ViewData["Title"] = "Thêm câu hỏi";
+}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-plus-circle me-2"></i>Thêm câu hỏi – <span class="opacity-75">@ViewBag.SurveyTitle</span>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="AddQuestion" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="SurveyId" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-3"></div>
+                    <div class="mb-3">
+                        <label asp-for="Text" class="form-label fw-semibold"></label>
+                        <textarea asp-for="Text" class="form-control" rows="2" placeholder="Nội dung câu hỏi..."></textarea>
+                        <span asp-validation-for="Text" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Type" class="form-label fw-semibold"></label>
+                        <select asp-for="Type" class="form-select" id="questionType" onchange="toggleOptions()">
+                            <option value="0">Văn bản tự do</option>
+                            <option value="1">Chọn một đáp án</option>
+                            <option value="2">Chọn nhiều đáp án</option>
+                            <option value="3">Đánh giá (1-5 sao)</option>
+                        </select>
+                    </div>
+                    <div class="mb-4" id="optionsGroup" style="display:none">
+                        <label asp-for="Options" class="form-label fw-semibold"></label>
+                        <textarea asp-for="Options" class="form-control" rows="4"
+                                  placeholder="Nhập mỗi lựa chọn trên một dòng:&#10;Rất tốt&#10;Tốt&#10;Bình thường&#10;Chưa tốt"></textarea>
+                        <div class="form-text">Nhập mỗi lựa chọn trên một dòng</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Thêm câu hỏi
+                        </button>
+                        <a asp-action="Questions" asp-route-surveyId="@Model.SurveyId" class="btn btn-outline-secondary">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        function toggleOptions() {
+            var t = document.getElementById('questionType').value;
+            var g = document.getElementById('optionsGroup');
+            g.style.display = (t === '1' || t === '2') ? 'block' : 'none';
+        }
+        toggleOptions();
+    </script>
+}

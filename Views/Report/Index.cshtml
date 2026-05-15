@@ -1,0 +1,130 @@
+@model QLTTYKPH.ViewModels.ReportViewModel
+@{
+    ViewData["Title"] = "Thống kê & Báo cáo";
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Thống kê & Báo cáo</h5>
+    <a asp-action="ExportExcel" class="btn btn-success btn-sm">
+        <i class="bi bi-file-earmark-excel me-1"></i>Xuất Excel tổng hợp
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#1a5f9e,#4db6f5)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">@Model.TotalFeedbacks</div>
+                    <div class="stat-label">Tổng phản hồi</div>
+                </div>
+                <i class="bi bi-chat-left-text stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#dc3545,#ff8a80)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">@Model.NewFeedbacks</div>
+                    <div class="stat-label">Mới</div>
+                </div>
+                <i class="bi bi-inbox stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#fd7e14,#ffcc80)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">@Model.ProcessingFeedbacks</div>
+                    <div class="stat-label">Đang xử lý</div>
+                </div>
+                <i class="bi bi-arrow-repeat stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="stat-card" style="background: linear-gradient(135deg,#198754,#69f0ae)">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">@Model.CompletedFeedbacks</div>
+                    <div class="stat-label">Hoàn thành</div>
+                </div>
+                <i class="bi bi-check-circle stat-icon"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header fw-semibold"><i class="bi bi-journal-text me-2"></i>Thống kê theo khảo sát</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Khảo sát</th>
+                                <th class="text-center">Tổng PH</th>
+                                <th class="text-center">Hoàn thành</th>
+                                <th class="text-center">Tỉ lệ</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model.SurveyStats)
+                            {
+                                int pct = s.FeedbackCount > 0 ? (int)(s.CompletedCount * 100.0 / s.FeedbackCount) : 0;
+                                <tr>
+                                    <td>@s.SurveyTitle</td>
+                                    <td class="text-center"><span class="badge bg-primary">@s.FeedbackCount</span></td>
+                                    <td class="text-center"><span class="badge bg-success">@s.CompletedCount</span></td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height:8px;min-width:60px">
+                                            <div class="progress-bar bg-success" style="width:@pct%"></div>
+                                        </div>
+                                        <small class="text-muted">@pct%</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="SurveyDetail" asp-route-surveyId="@s.SurveyId" class="btn btn-sm btn-outline-primary me-1">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="ExportExcel" asp-route-surveyId="@s.SurveyId" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-file-earmark-excel"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!Model.SurveyStats.Any())
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-3">Chưa có dữ liệu</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header fw-semibold"><i class="bi bi-tags me-2"></i>Thống kê theo danh mục</div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @foreach (var c in Model.CategoryStats)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="small">@c.CategoryName</span>
+                            <span class="badge bg-info text-dark">@c.FeedbackCount phản hồi</span>
+                        </div>
+                    }
+                    @if (!Model.CategoryStats.Any())
+                    {
+                        <div class="list-group-item text-center text-muted py-3">Chưa có dữ liệu</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
