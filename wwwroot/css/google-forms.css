@@ -1,0 +1,296 @@
+/* Google Forms Aesthetic Overrides */
+body {
+    background-color: #f0ebf8 !important; /* Soft purple/grey background */
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Adjust the content area to not look like a standard dashboard */
+.gg-main-content {
+    background-color: #f0ebf8;
+    min-height: calc(100vh - 60px);
+    padding: 2rem 1rem;
+}
+
+.gg-form-container {
+    max-width: 770px;
+    margin: 0 auto;
+}
+
+/* The Cards */
+.gg-card {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #dadce0;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+    transition: box-shadow 0.2s, border-left 0.2s;
+    position: relative;
+}
+
+/* Active card indicator (for survey builder mostly) */
+.gg-card.active {
+    border-left: 6px solid #4285f4;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.gg-card-body {
+    padding: 1.5rem;
+}
+
+/* Top Header Card */
+.gg-card-header-top {
+    border-top: 10px solid #673ab7;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.gg-title {
+    font-size: 2rem;
+    font-weight: 400;
+    color: #202124;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.gg-desc {
+    font-size: 14px;
+    color: #202124;
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
+.gg-question-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #202124;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+/* Input Fields */
+.gg-input-text {
+    border: none !important;
+    border-bottom: 1px solid #d1d1d1 !important;
+    border-radius: 0 !important;
+    padding: 0.5rem 0 !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    transition: border-bottom-color 0.3s;
+    width: 100%;
+    color: #202124;
+}
+
+.gg-input-text:focus {
+    outline: none;
+    border-bottom: 2px solid #673ab7 !important;
+}
+
+/* Radios and Checkboxes */
+.gg-option-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.gg-option-row .form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-top: 0;
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+.gg-option-row .form-check-input:checked {
+    background-color: #673ab7;
+    border-color: #673ab7;
+}
+
+.gg-option-row .form-check-label {
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #202124;
+    padding-top: 2px;
+}
+
+/* Actions */
+.gg-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid #dadce0;
+    gap: 10px;
+}
+
+.gg-btn-primary {
+    background-color: #673ab7;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 24px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.gg-btn-primary:hover {
+    background-color: #5e35b1;
+    color: #fff;
+}
+
+.gg-btn-outline {
+    background-color: transparent;
+    color: #673ab7;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    padding: 8px 24px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.gg-btn-outline:hover {
+    background-color: #f8f9fa;
+    color: #673ab7;
+}
+
+.gg-icon-btn {
+    background: transparent;
+    border: none;
+    color: #5f6368;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    cursor: pointer;
+}
+
+.gg-icon-btn:hover {
+    background-color: #f1f3f4;
+    color: #202124;
+}
+
+/* Rating Scale */
+.gg-rating-scale {
+    display: flex;
+    justify-content: space-between;
+    max-width: 400px;
+    margin: 1rem auto;
+}
+
+.gg-rating-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.gg-rating-option .form-check-input {
+    margin: 0;
+    width: 20px;
+    height: 20px;
+}
+
+/* Floating Toolbar for Admin */
+.gg-floating-toolbar {
+    position: fixed;
+    right: 40px;
+    bottom: 40px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 12px;
+    z-index: 100;
+}
+
+.gg-floating-toolbar .gg-icon-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+}
+
+@media (max-width: 900px) {
+    .gg-floating-toolbar {
+        position: static;
+        flex-direction: row;
+        justify-content: center;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
+    }
+}
+
+/* Dynamic Option Inputs for Builder */
+.gg-dynamic-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.gg-dynamic-option i.type-icon {
+    color: #9aa0a6;
+    font-size: 1.1rem;
+}
+
+.gg-dynamic-input {
+    flex-grow: 1;
+    border: none !important;
+    border-bottom: 1px solid #d1d1d1 !important;
+    border-radius: 0 !important;
+    padding: 0.4rem 0 !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+    color: #202124;
+    transition: border-bottom-color 0.3s;
+}
+
+.gg-dynamic-input:focus {
+    outline: none;
+    border-bottom: 2px solid #673ab7 !important;
+}
+
+.gg-remove-opt-btn {
+    background: transparent;
+    border: none;
+    color: #5f6368;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.gg-remove-opt-btn:hover {
+    background-color: #fce8e6;
+    color: #d93025;
+}
+
+.gg-add-opt-btn {
+    background: transparent;
+    border: none;
+    color: #673ab7;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.gg-add-opt-btn:hover {
+    background-color: #f0ebf8;
+}

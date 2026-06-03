@@ -38,23 +38,81 @@ namespace QLTTYKPH.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Khảo sát môn học"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Khảo sát cơ sở vật chất"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Khảo sát dịch vụ sinh viên"
-                        });
+            modelBuilder.Entity("QLTTYKPH.Models.Class", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("QLTTYKPH.Models.Complaint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ResolutionNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ResolvedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("ResolvedByUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Complaints");
                 });
 
             modelBuilder.Entity("QLTTYKPH.Models.Department", b =>
@@ -65,6 +123,10 @@ namespace QLTTYKPH.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -73,23 +135,6 @@ namespace QLTTYKPH.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Departments");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Phòng Đào tạo"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Phòng Khảo thí"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Phòng Quản trị"
-                        });
                 });
 
             modelBuilder.Entity("QLTTYKPH.Models.Feedback", b =>
@@ -100,8 +145,9 @@ namespace QLTTYKPH.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("datetime2");
@@ -168,6 +214,10 @@ namespace QLTTYKPH.Migrations
                     b.Property<int>("HandlerUserId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("FeedbackId");
@@ -186,7 +236,11 @@ namespace QLTTYKPH.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Options")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
 
                     b.Property<int>("SurveyId")
                         .HasColumnType("int");
@@ -195,8 +249,9 @@ namespace QLTTYKPH.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -216,9 +271,14 @@ namespace QLTTYKPH.Migrations
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ClassTarget")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                    b.Property<int?>("ClassId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
@@ -226,8 +286,17 @@ namespace QLTTYKPH.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -237,6 +306,8 @@ namespace QLTTYKPH.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ClassId");
 
                     b.HasIndex("DepartmentId");
 
@@ -251,22 +322,29 @@ namespace QLTTYKPH.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Class")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<int?>("ClassId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Department")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -275,37 +353,38 @@ namespace QLTTYKPH.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ClassId");
+
                     b.HasIndex("Username")
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            FullName = "Quản trị viên",
-                            Password = "$2a$11$nlXS4cp2ZZhXZRI50rfkeea/aYieEeIhjNrZ2ahbA2G2r1v0OX3pm",
-                            Role = 0,
-                            Username = "admin"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            FullName = "Nguyễn Văn A",
-                            Password = "$2a$11$4j6q4wBUDFTj.dJ1ihVpsO42eIYsvdSm7fg62Jmcx1UFoQfMZwMhK",
-                            Role = 1,
-                            Username = "staff01"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Class = "CNTT01",
-                            FullName = "Trần Thị B",
-                            Password = "$2a$11$bHphvEqo9E3O9RQEpscPFe1JUNjbaGYwHHfNmchBRiMkFO5r7Ap5K",
-                            Role = 2,
-                            Username = "sv001"
-                        });
+            modelBuilder.Entity("QLTTYKPH.Models.Complaint", b =>
+                {
+                    b.HasOne("QLTTYKPH.Models.Department", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QLTTYKPH.Models.User", "ResolvedByUser")
+                        .WithMany()
+                        .HasForeignKey("ResolvedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("QLTTYKPH.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Department");
+
+                    b.Navigation("ResolvedByUser");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("QLTTYKPH.Models.Feedback", b =>
@@ -383,6 +462,11 @@ namespace QLTTYKPH.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("QLTTYKPH.Models.Class", "Class")
+                        .WithMany("Surveys")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("QLTTYKPH.Models.Department", "Department")
                         .WithMany("Surveys")
                         .HasForeignKey("DepartmentId")
@@ -390,12 +474,31 @@ namespace QLTTYKPH.Migrations
 
                     b.Navigation("Category");
 
+                    b.Navigation("Class");
+
                     b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("QLTTYKPH.Models.User", b =>
+                {
+                    b.HasOne("QLTTYKPH.Models.Class", "Class")
+                        .WithMany("Users")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Class");
                 });
 
             modelBuilder.Entity("QLTTYKPH.Models.Category", b =>
                 {
                     b.Navigation("Surveys");
+                });
+
+            modelBuilder.Entity("QLTTYKPH.Models.Class", b =>
+                {
+                    b.Navigation("Surveys");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("QLTTYKPH.Models.Department", b =>

@@ -63,6 +63,13 @@ namespace QLTTYKPH.Controllers
             }
 
             SessionHelper.SetUser(HttpContext.Session, user);
+
+            if (user.MustChangePassword)
+            {
+                TempData["Warning"] = "Bạn cần đổi mật khẩu trước khi tiếp tục.";
+                return RedirectToAction("ChangePassword");
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
@@ -102,6 +109,7 @@ namespace QLTTYKPH.Controllers
             }
 
             user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            user.MustChangePassword = false;
             await _db.SaveChangesAsync();
             TempData["Success"] = "Đổi mật khẩu thành công!";
             return RedirectToAction("Index", "Home");

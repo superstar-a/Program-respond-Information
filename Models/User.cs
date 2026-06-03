@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QLTTYKPH.Models
 {
@@ -32,13 +33,18 @@ namespace QLTTYKPH.Models
         [Display(Name = "Vai trò")]
         public UserRole Role { get; set; } = UserRole.Student;
 
-        [StringLength(100)]
         [Display(Name = "Lớp")]
-        public string? Class { get; set; }
+        public int? ClassId { get; set; }
+
+        [ForeignKey("ClassId")]
+        public Class? Class { get; set; }
 
         [StringLength(200)]
         [Display(Name = "Phòng ban")]
         public string? Department { get; set; }
+
+        [Display(Name = "Yêu cầu đổi mật khẩu")]
+        public bool MustChangePassword { get; set; } = false;
 
         public ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
         public ICollection<ProcessingRecord> ProcessingRecords { get; set; } = new List<ProcessingRecord>();

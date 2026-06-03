@@ -38,7 +38,7 @@
                     </div>
                     <div class="col-sm-6">
                         <span class="text-muted">Lớp mục tiêu:</span>
-                        <strong class="ms-1">@(string.IsNullOrEmpty(Model.ClassTarget) ? "Tất cả" : Model.ClassTarget)</strong>
+                        <strong class="ms-1">@(Model.Class?.Name ?? "Tất cả")</strong>
                     </div>
                     <div class="col-sm-6">
                         <span class="text-muted">Số phản hồi:</span>

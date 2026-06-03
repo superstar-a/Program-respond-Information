@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -40,6 +40,7 @@
             #content, footer.site-footer { margin-left: 0; }
         }
     </style>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
 @{
@@ -51,8 +52,9 @@
 @if (isLoggedIn)
 {
 <div id="sidebar">
-    <div class="sidebar-header">
-        <h5><i class="bi bi-clipboard2-pulse-fill me-2"></i>QLTTYKPH</h5>
+    <div class="sidebar-header text-center">
+        <img src="~/img/logo.png" alt="Logo" style="width: 50px; margin-bottom: 10px;" />
+        <h5>QLTTYKPH</h5>
         <small>Quản lý ý kiến phản hồi</small>
     </div>
     <ul class="nav-items">
@@ -63,8 +65,9 @@
         {
             <li><span class="nav-section">Khảo sát</span></li>
             <li><a asp-controller="Survey" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Survey" ? "active" : "")"><i class="bi bi-journal-text"></i> Quản lý khảo sát</a></li>
-            <li><span class="nav-section">Phản hồi</span></li>
+            <li><span class="nav-section">Phản hồi & Khiếu nại</span></li>
             <li><a asp-controller="Feedback" asp-action="All" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Feedback" && ViewContext.RouteData.Values["action"]?.ToString() == "All" ? "active" : "")"><i class="bi bi-chat-left-text"></i> Tất cả phản hồi</a></li>
+            <li><a asp-controller="Complaint" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Complaint" ? "active" : "")"><i class="bi bi-shield-exclamation"></i> Giải quyết khiếu nại</a></li>
             <li><span class="nav-section">Báo cáo</span></li>
             <li><a asp-controller="Report" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" ? "active" : "")"><i class="bi bi-bar-chart-line"></i> Thống kê & Báo cáo</a></li>
         }
@@ -75,6 +78,7 @@
             <li><a asp-controller="Admin" asp-action="Users" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : "")"><i class="bi bi-people"></i> Tài khoản</a></li>
             <li><a asp-controller="Admin" asp-action="Categories" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Categories" ? "active" : "")"><i class="bi bi-tags"></i> Danh mục</a></li>
             <li><a asp-controller="Admin" asp-action="Departments" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Departments" ? "active" : "")"><i class="bi bi-building"></i> Phòng ban</a></li>
+            <li><a asp-controller="Admin" asp-action="Classes" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Classes" ? "active" : "")"><i class="bi bi-mortarboard"></i> Lớp học</a></li>
         }
 
         @if (role == "Student")
@@ -82,6 +86,8 @@
             <li><span class="nav-section">Khảo sát</span></li>
             <li><a asp-controller="Feedback" asp-action="OpenSurveys" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "OpenSurveys" ? "active" : "")"><i class="bi bi-clipboard-check"></i> Khảo sát đang mở</a></li>
             <li><a asp-controller="Feedback" asp-action="MyFeedbacks" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "MyFeedbacks" ? "active" : "")"><i class="bi bi-clock-history"></i> Phản hồi của tôi</a></li>
+            <li><span class="nav-section">Khiếu nại</span></li>
+            <li><a asp-controller="Complaint" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Complaint" ? "active" : "")"><i class="bi bi-chat-right-text"></i> Khiếu nại của tôi</a></li>
         }
 
         <li><span class="nav-section">Tài khoản</span></li>

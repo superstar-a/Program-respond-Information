@@ -36,8 +36,15 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label asp-for="Class" class="form-label fw-semibold"></label>
-                        <input asp-for="Class" class="form-control" placeholder="Ví dụ: CNTT01 (chỉ dành cho sinh viên)" />
+                        <label asp-for="ClassId" class="form-label fw-semibold"></label>
+                        <select asp-for="ClassId" class="form-select">
+                            <option value="">-- Chọn lớp --</option>
+                            @foreach (var c in (List<QLTTYKPH.Models.Class>)ViewBag.Classes)
+                            {
+                                <option value="@c.Id">@c.Name</option>
+                            }
+                        </select>
+                        <div class="form-text">Chỉ dành cho sinh viên</div>
                     </div>
                     <div class="mb-4">
                         <label asp-for="Department" class="form-label fw-semibold"></label>

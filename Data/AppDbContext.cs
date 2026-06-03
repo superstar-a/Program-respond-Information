@@ -15,6 +15,8 @@ namespace QLTTYKPH.Data
         public DbSet<ProcessingRecord> ProcessingRecords { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Department> Departments { get; set; }
+        public DbSet<Class> Classes { get; set; }
+        public DbSet<Complaint> Complaints { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -66,6 +68,18 @@ namespace QLTTYKPH.Data
                 .HasForeignKey(s => s.DepartmentId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Survey>()
+                .HasOne(s => s.Class)
+                .WithMany(c => c.Surveys)
+                .HasForeignKey(s => s.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Class)
+                .WithMany(c => c.Users)
+                .HasForeignKey(u => u.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<Question>()
                 .HasOne(q => q.Survey)
                 .WithMany(s => s.Questions)
@@ -106,6 +120,35 @@ namespace QLTTYKPH.Data
                 .HasOne(pr => pr.HandlerUser)
                 .WithMany(u => u.ProcessingRecords)
                 .HasForeignKey(pr => pr.HandlerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Complaint>()
+                .Property(c => c.Status)
+                .HasConversion(
+                    v => v == ComplaintStatus.Processing ? "InProgress"
+                       : v == ComplaintStatus.Resolved ? "Resolved"
+                       : "New",
+                    v => v.ToLower() == "inprogress" ? ComplaintStatus.Processing
+                       : v.ToLower() == "resolved" ? ComplaintStatus.Resolved
+                       : ComplaintStatus.New
+                );
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.Department)
+                .WithMany()
+                .HasForeignKey(c => c.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Complaint>()
+                .HasOne(c => c.ResolvedByUser)
+                .WithMany()
+                .HasForeignKey(c => c.ResolvedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

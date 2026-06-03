@@ -1,0 +1,125 @@
+@model IEnumerable<QLTTYKPH.Models.Complaint>
+@{
+    var role = Context.Session.GetString("UserRole");
+    ViewData["Title"] = role == "Student" ? "Khiếu nại của tôi" : "Giải quyết khiếu nại";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="fw-bold mb-0">
+        <i class="bi bi-shield-exclamation me-2 text-primary"></i>@ViewData["Title"]
+    </h5>
+    @if (role == "Student")
+    {
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="bi bg-plus-circle-fill me-1"></i>Gửi khiếu nại mới
+        </a>
+    }
+</div>
+
+@if (role == "Admin")
+{
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <select name="departmentId" class="form-select form-select-sm">
+                        <option value="">-- Tất cả phòng ban tiếp nhận --</option>
+                        @foreach (var d in (List<QLTTYKPH.Models.Department>)ViewBag.Departments)
+                        {
+                            <option value="@d.Id" selected="@(ViewBag.DepartmentId != null && ViewBag.DepartmentId.ToString() == d.Id.ToString())">@d.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">-- Tất cả trạng thái --</option>
+                        <option value="New" selected="@(ViewBag.Status == "New")">Mới</option>
+                        <option value="Processing" selected="@(ViewBag.Status == "Processing")">Đang xử lý</option>
+                        <option value="Resolved" selected="@(ViewBag.Status == "Resolved")">Đã giải quyết</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Lọc</button>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-1">Xóa lọc</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Tiêu đề</th>
+                        @if (role != "Student")
+                        {
+                            <th>Người khiếu nại</th>
+                            <th>Lớp</th>
+                        }
+                        <th>Phòng ban tiếp nhận</th>
+                        <th>Thời gian gửi</th>
+                        <th class="text-center">Trạng thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int stt = 1;}
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td class="text-muted small">@(stt++)</td>
+                            <td><strong class="text-dark">@c.Title</strong></td>
+                            @if (role != "Student")
+                            {
+                                @if (c.IsAnonymous)
+                                {
+                                    <td><span class="badge bg-secondary"><i class="bi bi-incognito me-1"></i>Ẩn danh</span></td>
+                                    <td class="small text-muted">-</td>
+                                }
+                                else
+                                {
+                                    <td>@c.User?.FullName</td>
+                                    <td class="small text-muted">@(c.User?.Class?.Name ?? "-")</td>
+                                }
+                            }
+                            <td><span class="badge bg-light text-dark border">@c.Department?.Name</span></td>
+                            <td class="small text-muted">@c.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-center">
+                                @switch (c.Status)
+                                {
+                                    case QLTTYKPH.Models.ComplaintStatus.New:
+                                        <span class="badge bg-danger">Mới</span>
+                                        break;
+                                    case QLTTYKPH.Models.ComplaintStatus.Processing:
+                                        <span class="badge bg-warning text-dark">Đang xử lý</span>
+                                        break;
+                                    case QLTTYKPH.Models.ComplaintStatus.Resolved:
+                                        <span class="badge bg-success">Đã giải quyết</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-center">
+                                <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>@(role == "Student" ? "Xem" : "Xử lý")
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="@(role == "Student" ? 6 : 8)" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                Chưa có khiếu nại nào
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

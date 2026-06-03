@@ -145,3 +145,4 @@ D:\PTTKHDT-2\QLTTYKPH\obj\Debug\net8.0\refint\QLTTYKPH.dll
 D:\PTTKHDT-2\QLTTYKPH\obj\Debug\net8.0\QLTTYKPH.pdb
 d:\PTTKHDT-2\QLTTYKPH\obj\Debug\net8.0\QLTTYKPH.genruntimeconfig.cache
 d:\PTTKHDT-2\QLTTYKPH\obj\Debug\net8.0\ref\QLTTYKPH.dll
+D:\PTTKHDT-2\QLTTYKPH\obj\Debug\net8.0\QLTTYKPH.sourcelink.json

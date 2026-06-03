@@ -43,16 +43,28 @@
                             </select>
                         </div>
                     </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="StartDate" class="form-label fw-semibold"></label>
+                            <input asp-for="StartDate" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EndDate" class="form-label fw-semibold"></label>
+                            <input asp-for="EndDate" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="EndDate" class="text-danger small"></span>
+                        </div>
+                    </div>
                     <div class="mb-4">
-                        <label asp-for="ClassTarget" class="form-label fw-semibold"></label>
-                        <select id="ClassTarget" name="ClassTarget" class="form-select select2-class" style="width:100%">
+                        <label asp-for="ClassId" class="form-label fw-semibold"></label>
+                        <select asp-for="ClassId" class="form-select">
                             <option value="">Tất cả các lớp</option>
-                            @foreach (var cls in (List<string>)ViewBag.Classes)
+                            @foreach (var cls in (List<QLTTYKPH.Models.Class>)ViewBag.Classes)
                             {
-                                <option value="@cls">@cls</option>
+                                <option value="@cls.Id">@cls.Name</option>
                             }
                         </select>
-                        <div class="form-text">Chọn lớp mục tiêu hoặc nhập tên lớp mới. Để trống = tất cả sinh viên</div>
+                        <div class="form-text">Chọn lớp mục tiêu. Để trống = tất cả sinh viên</div>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -67,16 +79,20 @@
 </div>
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        $(document).ready(function () {
-            $('.select2-class').select2({
-                theme: 'bootstrap-5',
-                tags: true,
-                language: { noResults: function () { return 'Nhập tên lớp mới rồi nhấn Enter'; } }
-            });
+        document.addEventListener('DOMContentLoaded', function() {
+            var startDateInput = document.getElementById('StartDate');
+            var endDateInput = document.getElementById('EndDate');
+            if (startDateInput && endDateInput) {
+                startDateInput.addEventListener('change', function() {
+                    if (startDateInput.value) {
+                        endDateInput.min = startDateInput.value;
+                        if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                            endDateInput.value = ''; // clear if invalid
+                        }
+                    }
+                });
+            }
         });
     </script>
 }

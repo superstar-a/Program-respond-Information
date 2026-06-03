@@ -59,8 +59,19 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    if (!db.Classes.Any())
+    {
+        db.Classes.AddRange(
+            new QLTTYKPH.Models.Class { Name = "CNTT01" },
+            new QLTTYKPH.Models.Class { Name = "CNTT02" },
+            new QLTTYKPH.Models.Class { Name = "KT01" }
+        );
+        db.SaveChanges();
+    }
+
     if (!db.Users.Any())
     {
+        var cntt01Class = db.Classes.FirstOrDefault(c => c.Name == "CNTT01");
         db.Users.AddRange(
             new QLTTYKPH.Models.User
             {
@@ -82,7 +93,7 @@ using (var scope = app.Services.CreateScope())
                 Password = BCrypt.Net.BCrypt.HashPassword("Student@123"),
                 FullName = "Trần Thị B",
                 Role = QLTTYKPH.Models.UserRole.Student,
-                Class = "CNTT01"
+                ClassId = cntt01Class?.Id
             }
         );
         db.SaveChanges();

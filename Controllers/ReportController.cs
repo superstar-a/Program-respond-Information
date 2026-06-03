@@ -120,7 +120,7 @@ namespace QLTTYKPH.Controllers
                     col = 1;
                     ws.Cell(row, col++).Value = stt++;
                     ws.Cell(row, col++).Value = fb.User?.FullName ?? "";
-                    ws.Cell(row, col++).Value = fb.User?.Class ?? "";
+                    ws.Cell(row, col++).Value = fb.User?.Class?.Name ?? "";
                     ws.Cell(row, col++).Value = fb.SubmittedAt?.ToString("dd/MM/yyyy HH:mm") ?? "";
                     ws.Cell(row, col++).Value = fb.Status switch
                     {

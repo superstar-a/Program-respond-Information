@@ -27,9 +27,17 @@ namespace QLTTYKPH.Models
         [Display(Name = "Ngày đóng")]
         public DateTime? ClosedAt { get; set; }
 
-        [StringLength(200)]
+        [Display(Name = "Thời gian mở")]
+        public DateTime? StartDate { get; set; }
+
+        [Display(Name = "Thời gian kết thúc")]
+        public DateTime? EndDate { get; set; }
+
         [Display(Name = "Lớp mục tiêu")]
-        public string ClassTarget { get; set; } = string.Empty;
+        public int? ClassId { get; set; }
+
+        [ForeignKey("ClassId")]
+        public Class? Class { get; set; }
 
         [Display(Name = "Danh mục")]
         public int? CategoryId { get; set; }

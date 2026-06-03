@@ -27,18 +27,20 @@ namespace QLTTYKPH.Controllers
             int userId = SessionHelper.GetUserId(HttpContext.Session)!.Value;
             var user = await _db.Users.FindAsync(userId);
 
+            var now = DateTime.Now;
             var surveys = await _db.Surveys
                 .Include(s => s.Category)
                 .Include(s => s.Department)
-                .Where(s => s.IsPublished)
+                .Where(s => s.IsPublished && 
+                            (s.StartDate == null || s.StartDate <= now) &&
+                            (s.EndDate == null || s.EndDate >= now))
                 .ToListAsync();
 
             // Lọc theo lớp nếu có
-            if (!string.IsNullOrWhiteSpace(user?.Class))
+            if (user?.ClassId != null)
             {
                 surveys = surveys.Where(s =>
-                    string.IsNullOrWhiteSpace(s.ClassTarget) ||
-                    s.ClassTarget.Contains(user.Class)
+                    s.ClassId == null || s.ClassId == user.ClassId
                 ).ToList();
             }
 
@@ -70,9 +72,12 @@ namespace QLTTYKPH.Controllers
                 return RedirectToAction("OpenSurveys");
             }
 
+            var now = DateTime.Now;
             var survey = await _db.Surveys
                 .Include(s => s.Questions)
-                .FirstOrDefaultAsync(s => s.Id == surveyId && s.IsPublished);
+                .FirstOrDefaultAsync(s => s.Id == surveyId && s.IsPublished &&
+                                          (s.StartDate == null || s.StartDate <= now) &&
+                                          (s.EndDate == null || s.EndDate >= now));
 
             if (survey == null)
             {
@@ -173,27 +178,93 @@ namespace QLTTYKPH.Controllers
             return View(feedback);
         }
 
-        // Danh sách tất cả phản hồi (Staff/Admin)
-        public async Task<IActionResult> All(int? surveyId, string? status)
+        // Danh sách tất cả Khảo sát (Staff/Admin Overview)
+        public async Task<IActionResult> All()
         {
             if (!SessionHelper.IsLoggedIn(HttpContext.Session))
                 return RedirectToAction("Login", "Account");
             if (SessionHelper.IsStudent(HttpContext.Session))
                 return RedirectToAction("Index", "Home");
 
-            var query = _db.Feedbacks
-                .Include(f => f.User)
-                .Include(f => f.Survey)
+            int userId = SessionHelper.GetUserId(HttpContext.Session)!.Value;
+            var user = await _db.Users.FindAsync(userId);
+            bool isAdmin = SessionHelper.IsAdmin(HttpContext.Session);
+
+            var query = _db.Surveys
+                .Include(s => s.Category)
+                .Include(s => s.Department)
+                .Include(s => s.Class)
+                .Include(s => s.Feedbacks)
                 .AsQueryable();
 
-            if (surveyId.HasValue)
-                query = query.Where(f => f.SurveyId == surveyId);
+            if (!isAdmin && user != null)
+            {
+                // Nhân viên chỉ thấy Khảo sát của Phòng ban mình hoặc Lớp mình quản lý
+                query = query.Where(s => 
+                    (user.Department != null && s.Department != null && s.Department.Name == user.Department) ||
+                    (user.ClassId != null && s.ClassId == user.ClassId)
+                );
+            }
+
+            var surveys = await query.OrderByDescending(s => s.CreatedAt).ToListAsync();
+
+            var vmList = surveys.Select(s => new FeedbackSurveyListViewModel
+            {
+                SurveyId = s.Id,
+                Title = s.Title,
+                CategoryName = s.Category?.Name,
+                DepartmentName = s.Department?.Name,
+                ClassName = s.Class?.Name,
+                IsPublished = s.IsPublished,
+                TotalFeedbacks = s.Feedbacks.Count,
+                NewFeedbacks = s.Feedbacks.Count(f => f.Status == FeedbackStatus.New),
+                ProcessingFeedbacks = s.Feedbacks.Count(f => f.Status == FeedbackStatus.Processing),
+                CompletedFeedbacks = s.Feedbacks.Count(f => f.Status == FeedbackStatus.Completed)
+            }).ToList();
+
+            return View(vmList);
+        }
+
+        // Danh sách phản hồi của 1 khảo sát (Staff/Admin)
+        public async Task<IActionResult> BySurvey(int surveyId, string? status)
+        {
+            if (!SessionHelper.IsLoggedIn(HttpContext.Session))
+                return RedirectToAction("Login", "Account");
+            if (SessionHelper.IsStudent(HttpContext.Session))
+                return RedirectToAction("Index", "Home");
+
+            int userId = SessionHelper.GetUserId(HttpContext.Session)!.Value;
+            var user = await _db.Users.FindAsync(userId);
+            bool isAdmin = SessionHelper.IsAdmin(HttpContext.Session);
+
+            var survey = await _db.Surveys
+                .Include(s => s.Department)
+                .FirstOrDefaultAsync(s => s.Id == surveyId);
+
+            if (survey == null) return RedirectToAction("All");
+
+            if (!isAdmin && user != null)
+            {
+                bool isDeptMatch = user.Department != null && survey.Department != null && survey.Department.Name == user.Department;
+                bool isClassMatch = user.ClassId != null && survey.ClassId == user.ClassId;
+                if (!isDeptMatch && !isClassMatch)
+                {
+                    TempData["Error"] = "Bạn không có quyền xem phản hồi của khảo sát này.";
+                    return RedirectToAction("All");
+                }
+            }
+
+            var query = _db.Feedbacks
+                .Include(f => f.User)
+                    .ThenInclude(u => u.Class)
+                .Include(f => f.Survey)
+                .Where(f => f.SurveyId == surveyId)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<FeedbackStatus>(status, out var statusEnum))
                 query = query.Where(f => f.Status == statusEnum);
 
-            ViewBag.Surveys = await _db.Surveys.OrderByDescending(s => s.Id).ToListAsync();
-            ViewBag.SurveyId = surveyId;
+            ViewBag.Survey = survey;
             ViewBag.Status = status;
 
             return View(await query.OrderByDescending(f => f.SubmittedAt).ToListAsync());

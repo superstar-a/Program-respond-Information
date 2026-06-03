@@ -2,55 +2,188 @@
 @{
     ViewData["Title"] = "Sửa câu hỏi";
 }
-<div class="row justify-content-center">
-    <div class="col-md-7">
-        <div class="card">
-            <div class="card-header bg-warning text-dark">
-                <i class="bi bi-pencil me-2"></i>Sửa câu hỏi – <span>@ViewBag.SurveyTitle</span>
-            </div>
-            <div class="card-body p-4">
-                <form asp-action="EditQuestion" asp-route-id="@Model.Id" method="post">
-                    @Html.AntiForgeryToken()
-                    <div class="mb-3">
-                        <label asp-for="Text" class="form-label fw-semibold"></label>
-                        <textarea asp-for="Text" class="form-control" rows="2"></textarea>
-                        <span asp-validation-for="Text" class="text-danger small"></span>
-                    </div>
-                    <div class="mb-3">
-                        <label asp-for="Type" class="form-label fw-semibold"></label>
-                        <select asp-for="Type" class="form-select" id="questionType" onchange="toggleOptions()">
-                            <option value="0">Văn bản tự do</option>
-                            <option value="1">Chọn một đáp án</option>
-                            <option value="2">Chọn nhiều đáp án</option>
-                            <option value="3">Đánh giá (1-5 sao)</option>
-                        </select>
-                    </div>
-                    <div class="mb-4" id="optionsGroup">
-                        <label asp-for="Options" class="form-label fw-semibold"></label>
-                        <textarea asp-for="Options" class="form-control" rows="4"
-                                  placeholder="Mỗi lựa chọn một dòng..."></textarea>
-                        <div class="form-text">Nhập mỗi lựa chọn trên một dòng</div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-warning text-dark">
-                            <i class="bi bi-check-circle me-1"></i>Lưu
-                        </button>
-                        <a asp-action="Questions" asp-route-surveyId="@Model.SurveyId" class="btn btn-outline-secondary">Hủy</a>
-                    </div>
-                </form>
+
+@section Styles {
+    <link href="~/css/google-forms.css" rel="stylesheet" asp-append-version="true" />
+}
+
+<div class="gg-main-content">
+    <div class="gg-form-container">
+        
+        <div class="mb-3">
+            <a asp-action="Questions" asp-route-surveyId="@Model.SurveyId" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Quay lại danh sách câu hỏi
+            </a>
+        </div>
+
+        <div class="gg-card gg-card-header-top">
+            <div class="gg-card-body">
+                <h2 class="gg-title">Chỉnh sửa câu hỏi</h2>
+                <p class="gg-desc text-muted">Khảo sát: @ViewBag.SurveyTitle</p>
             </div>
         </div>
+
+        <form asp-action="EditQuestion" asp-route-id="@Model.Id" method="post" id="questionForm">
+            @Html.AntiForgeryToken()
+            <input asp-for="SurveyId" type="hidden" />
+            
+            <div class="gg-card active">
+                <div class="gg-card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-3"></div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <input asp-for="Text" class="gg-input-text fs-5" placeholder="Câu hỏi" required autofocus />
+                            <span asp-validation-for="Text" class="text-danger small mt-1 d-block"></span>
+                        </div>
+                        <div class="col-md-4 mt-3 mt-md-0">
+                            <select asp-for="Type" class="form-select" id="questionType" onchange="toggleOptions()">
+                                <option value="0">Văn bản tự do</option>
+                                <option value="1">Trắc nghiệm</option>
+                                <option value="2">Hộp kiểm</option>
+                                <option value="3">Phạm vi tuyến tính (1-5)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Hidden textarea for backend compatibility -->
+                    <textarea asp-for="Options" id="hiddenOptions" style="display:none;"></textarea>
+                    <span asp-validation-for="Options" class="text-danger small mt-1 d-block"></span>
+
+                    <!-- Dynamic Options Container -->
+                    <div id="dynamicOptionsContainer" style="display:none">
+                        <div id="optionsList">
+                            <!-- Options will be injected here via JS -->
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" class="gg-add-opt-btn" onclick="addOptionField()">
+                                <i class="bi bi-plus-circle"></i> Thêm tùy chọn
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <hr class="mt-5 mb-4" />
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a asp-action="Questions" asp-route-surveyId="@Model.SurveyId" class="gg-btn-outline text-decoration-none">Hủy</a>
+                        <button type="submit" class="gg-btn-primary">
+                            Cập nhật câu hỏi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
     </div>
 </div>
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
-        function toggleOptions() {
-            var t = document.getElementById('questionType').value;
-            var g = document.getElementById('optionsGroup');
-            g.style.display = (t === '1' || t === '2') ? 'block' : 'none';
+        const optionsList = document.getElementById('optionsList');
+        const hiddenOptions = document.getElementById('hiddenOptions');
+        const questionType = document.getElementById('questionType');
+        const dynamicOptionsContainer = document.getElementById('dynamicOptionsContainer');
+        const questionForm = document.getElementById('questionForm');
+        let initialized = false;
+
+        function getIconHtml() {
+            const type = questionType.value;
+            if (type === '1') return '<i class="bi bi-circle type-icon"></i>'; // Radio
+            if (type === '2') return '<i class="bi bi-square type-icon"></i>'; // Checkbox
+            return '';
         }
-        toggleOptions();
+
+        function createOptionElement(value = '') {
+            const div = document.createElement('div');
+            div.className = 'gg-dynamic-option';
+            
+            div.innerHTML = `
+                ${getIconHtml()}
+                <input type="text" class="gg-dynamic-input option-val" placeholder="Tùy chọn" value="${value}" required />
+                <button type="button" class="gg-remove-opt-btn" onclick="this.parentElement.remove()" title="Xóa">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            `;
+            return div;
+        }
+
+        function addOptionField(val = '') {
+            optionsList.appendChild(createOptionElement(val));
+            // focus new input if it was added manually
+            if (!val && initialized) {
+                const inputs = optionsList.querySelectorAll('.option-val');
+                if (inputs.length > 0) {
+                    inputs[inputs.length - 1].focus();
+                }
+            }
+        }
+
+        function updateIcons() {
+            const iconHtml = getIconHtml();
+            const icons = optionsList.querySelectorAll('.type-icon');
+            icons.forEach(icon => {
+                icon.outerHTML = iconHtml;
+            });
+        }
+
+        function toggleOptions() {
+            const type = questionType.value;
+            if (type === '1' || type === '2') {
+                dynamicOptionsContainer.style.display = 'block';
+                updateIcons();
+                
+                // Add initial option if empty
+                if (optionsList.children.length === 0) {
+                    addOptionField('Tùy chọn 1');
+                }
+                
+                // Make inputs required when visible
+                const inputs = optionsList.querySelectorAll('.option-val');
+                inputs.forEach(inp => inp.setAttribute('required', 'required'));
+            } else {
+                dynamicOptionsContainer.style.display = 'none';
+                // Remove required attribute when hidden
+                const inputs = optionsList.querySelectorAll('.option-val');
+                inputs.forEach(inp => inp.removeAttribute('required'));
+            }
+        }
+
+        // On page load, read from hiddenOptions and populate
+        function loadExistingOptions() {
+            const existing = hiddenOptions.value.trim();
+            if (existing) {
+                const lines = existing.split('\n');
+                lines.forEach(line => {
+                    if (line.trim()) {
+                        addOptionField(line.trim());
+                    }
+                });
+            }
+            initialized = true;
+            toggleOptions();
+        }
+
+        // On form submit, gather all dynamic inputs into the hidden textarea
+        questionForm.addEventListener('submit', function (e) {
+            const type = questionType.value;
+            if (type === '1' || type === '2') {
+                const inputs = optionsList.querySelectorAll('.option-val');
+                const values = Array.from(inputs).map(inp => inp.value.trim()).filter(val => val !== '');
+                
+                if (values.length < 2) {
+                    e.preventDefault();
+                    alert('Vui lòng thêm ít nhất 2 tùy chọn.');
+                    return;
+                }
+                
+                hiddenOptions.value = values.join('\n');
+            } else {
+                hiddenOptions.value = '';
+            }
+        });
+
+        // Initialize
+        loadExistingOptions();
     </script>
 }

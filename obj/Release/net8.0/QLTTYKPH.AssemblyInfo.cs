@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("QLTTYKPH")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6760425ef02ae128b34bceeab6db395270087f69")]
 [assembly: System.Reflection.AssemblyProductAttribute("QLTTYKPH")]
 [assembly: System.Reflection.AssemblyTitleAttribute("QLTTYKPH")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

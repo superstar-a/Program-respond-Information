@@ -24,7 +24,7 @@ namespace QLTTYKPH.Controllers
             return null!;
         }
 
-        public async Task<IActionResult> Index(string? search, int? categoryId, int? departmentId, bool? isPublished)
+        public async Task<IActionResult> Index(string? search, int? categoryId, int? departmentId, int? classId, bool? isPublished)
         {
             var redirect = RequireStaffOrAdmin();
             if (redirect != null) return redirect;
@@ -32,6 +32,7 @@ namespace QLTTYKPH.Controllers
             var query = _db.Surveys
                 .Include(s => s.Category)
                 .Include(s => s.Department)
+                .Include(s => s.Class)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
@@ -40,26 +41,27 @@ namespace QLTTYKPH.Controllers
                 query = query.Where(s => s.CategoryId == categoryId);
             if (departmentId.HasValue)
                 query = query.Where(s => s.DepartmentId == departmentId);
+            if (classId.HasValue)
+                query = query.Where(s => s.ClassId == classId);
             if (isPublished.HasValue)
                 query = query.Where(s => s.IsPublished == isPublished);
 
             ViewBag.Categories = await _db.Categories.ToListAsync();
             ViewBag.Departments = await _db.Departments.ToListAsync();
+            ViewBag.Classes = await GetClassListAsync();
             ViewBag.Search = search;
             ViewBag.CategoryId = categoryId;
             ViewBag.DepartmentId = departmentId;
+            ViewBag.ClassId = classId;
             ViewBag.IsPublished = isPublished;
 
             return View(await query.OrderByDescending(s => s.Id).ToListAsync());
         }
 
-        private async Task<List<string>> GetClassListAsync()
+        private async Task<List<Class>> GetClassListAsync()
         {
-            return await _db.Users
-                .Where(u => !string.IsNullOrEmpty(u.Class))
-                .Select(u => u.Class!)
-                .Distinct()
-                .OrderBy(c => c)
+            return await _db.Classes
+                .OrderBy(c => c.Name)
                 .ToListAsync();
         }
 
@@ -81,7 +83,11 @@ namespace QLTTYKPH.Controllers
             var redirect = RequireStaffOrAdmin();
             if (redirect != null) return redirect;
 
-            ModelState.Remove("ClassTarget");
+            if (model.StartDate.HasValue && model.EndDate.HasValue && model.EndDate <= model.StartDate)
+            {
+                ModelState.AddModelError("EndDate", "Thời gian kết thúc phải sau thời gian mở.");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Categories = await _db.Categories.ToListAsync();
@@ -92,7 +98,6 @@ namespace QLTTYKPH.Controllers
 
             model.IsPublished = false;
             model.CreatedAt = DateTime.Now;
-            model.ClassTarget = model.ClassTarget ?? string.Empty;
             _db.Surveys.Add(model);
             await _db.SaveChangesAsync();
             TempData["Success"] = "Tạo khảo sát thành công!";
@@ -123,7 +128,11 @@ namespace QLTTYKPH.Controllers
             var survey = await _db.Surveys.FindAsync(id);
             if (survey == null) return NotFound();
 
-            ModelState.Remove("ClassTarget");
+            if (model.StartDate.HasValue && model.EndDate.HasValue && model.EndDate <= model.StartDate)
+            {
+                ModelState.AddModelError("EndDate", "Thời gian kết thúc phải sau thời gian mở.");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Categories = await _db.Categories.ToListAsync();
@@ -134,9 +143,11 @@ namespace QLTTYKPH.Controllers
 
             survey.Title = model.Title;
             survey.Description = model.Description;
-            survey.ClassTarget = model.ClassTarget ?? string.Empty;
+            survey.ClassId = model.ClassId;
             survey.CategoryId = model.CategoryId;
             survey.DepartmentId = model.DepartmentId;
+            survey.StartDate = model.StartDate;
+            survey.EndDate = model.EndDate;
             await _db.SaveChangesAsync();
             TempData["Success"] = "Cập nhật khảo sát thành công!";
             return RedirectToAction("Index");
@@ -188,7 +199,7 @@ namespace QLTTYKPH.Controllers
             if (redirect != null) return redirect;
 
             var survey = await _db.Surveys
-                .Include(s => s.Questions)
+                .Include(s => s.Questions.OrderBy(q => q.Order))
                 .FirstOrDefaultAsync(s => s.Id == surveyId);
             if (survey == null) return NotFound();
             return View(survey);
@@ -225,6 +236,84 @@ namespace QLTTYKPH.Controllers
             await _db.SaveChangesAsync();
             TempData["Success"] = "Thêm câu hỏi thành công!";
             return RedirectToAction("Questions", new { surveyId = model.SurveyId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MoveQuestionUp(int id)
+        {
+            var redirect = RequireStaffOrAdmin();
+            if (redirect != null) return redirect;
+
+            var question = await _db.Questions.FindAsync(id);
+            if (question == null) return NotFound();
+
+            var questions = await _db.Questions
+                .Where(q => q.SurveyId == question.SurveyId)
+                .OrderBy(q => q.Order)
+                .ToListAsync();
+
+            var currentIndex = questions.FindIndex(q => q.Id == id);
+            if (currentIndex > 0)
+            {
+                var prevQuestion = questions[currentIndex - 1];
+                int tempOrder = question.Order;
+                question.Order = prevQuestion.Order;
+                prevQuestion.Order = tempOrder;
+                await _db.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Questions", new { surveyId = question.SurveyId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MoveQuestionDown(int id)
+        {
+            var redirect = RequireStaffOrAdmin();
+            if (redirect != null) return redirect;
+
+            var question = await _db.Questions.FindAsync(id);
+            if (question == null) return NotFound();
+
+            var questions = await _db.Questions
+                .Where(q => q.SurveyId == question.SurveyId)
+                .OrderBy(q => q.Order)
+                .ToListAsync();
+
+            var currentIndex = questions.FindIndex(q => q.Id == id);
+            if (currentIndex < questions.Count - 1)
+            {
+                var nextQuestion = questions[currentIndex + 1];
+                int tempOrder = question.Order;
+                question.Order = nextQuestion.Order;
+                nextQuestion.Order = tempOrder;
+                await _db.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Questions", new { surveyId = question.SurveyId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResequenceQuestions(int surveyId)
+        {
+            var redirect = RequireStaffOrAdmin();
+            if (redirect != null) return redirect;
+
+            var questions = await _db.Questions
+                .Where(q => q.SurveyId == surveyId)
+                .OrderBy(q => q.Order)
+                .ToListAsync();
+
+            for (int i = 0; i < questions.Count; i++)
+            {
+                questions[i].Order = i + 1;
+            }
+
+            await _db.SaveChangesAsync();
+            TempData["Success"] = "Đã sắp xếp lại số thứ tự câu hỏi!";
+            return RedirectToAction("Questions", new { surveyId });
         }
 
         [HttpGet]

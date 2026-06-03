@@ -39,10 +39,11 @@ namespace QLTTYKPH.Controllers
         }
 
         [HttpGet]
-        public IActionResult CreateUser()
+        public async Task<IActionResult> CreateUser()
         {
             var redirect = RequireAdmin();
             if (redirect != null) return redirect;
+            ViewBag.Classes = await _db.Classes.ToListAsync();
             return View(new User());
         }
 
@@ -54,11 +55,15 @@ namespace QLTTYKPH.Controllers
             if (redirect != null) return redirect;
 
             if (!ModelState.IsValid)
+            {
+                ViewBag.Classes = await _db.Classes.ToListAsync();
                 return View(model);
+            }
 
             if (await _db.Users.AnyAsync(u => u.Username == model.Username))
             {
                 ModelState.AddModelError("Username", "Tên đăng nhập đã tồn tại");
+                ViewBag.Classes = await _db.Classes.ToListAsync();
                 return View(model);
             }
 
@@ -70,6 +75,83 @@ namespace QLTTYKPH.Controllers
         }
 
         [HttpGet]
+        public IActionResult BulkCreateUsers()
+        {
+            var redirect = RequireAdmin();
+            if (redirect != null) return redirect;
+            ViewBag.Classes = _db.Classes.ToList();
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BulkCreateUsers(string csvData, UserRole defaultRole, int? defaultClassId)
+        {
+            var redirect = RequireAdmin();
+            if (redirect != null) return redirect;
+
+            if (string.IsNullOrWhiteSpace(csvData))
+            {
+                TempData["Error"] = "Vui lòng nhập dữ liệu!";
+                ViewBag.Classes = _db.Classes.ToList();
+                return View();
+            }
+
+            var lines = csvData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var createdCount = 0;
+            var errorCount = 0;
+            var errors = new List<string>();
+
+            foreach (var line in lines)
+            {
+                var parts = line.Split(',', StringSplitOptions.TrimEntries);
+                if (parts.Length < 2)
+                {
+                    errorCount++;
+                    errors.Add($"Dòng không hợp lệ: {line}");
+                    continue;
+                }
+
+                var username = parts[0];
+                var fullName = parts[1];
+                var password = parts.Length > 2 ? parts[2] : "123456"; // Mật khẩu mặc định
+
+                if (await _db.Users.AnyAsync(u => u.Username == username))
+                {
+                    errorCount++;
+                    errors.Add($"Username {username} đã tồn tại");
+                    continue;
+                }
+
+                var user = new User
+                {
+                    Username = username,
+                    Password = BCrypt.Net.BCrypt.HashPassword(password),
+                    FullName = fullName,
+                    Role = defaultRole,
+                    ClassId = defaultClassId,
+                    MustChangePassword = true
+                };
+
+                _db.Users.Add(user);
+                createdCount++;
+            }
+
+            await _db.SaveChangesAsync();
+
+            if (errorCount > 0)
+            {
+                TempData["Warning"] = $"Đã tạo {createdCount} tài khoản, {errorCount} lỗi: {string.Join("; ", errors.Take(5))}";
+            }
+            else
+            {
+                TempData["Success"] = $"Đã tạo thành công {createdCount} tài khoản!";
+            }
+
+            return RedirectToAction("Users");
+        }
+
+        [HttpGet]
         public async Task<IActionResult> EditUser(int id)
         {
             var redirect = RequireAdmin();
@@ -77,12 +159,13 @@ namespace QLTTYKPH.Controllers
 
             var user = await _db.Users.FindAsync(id);
             if (user == null) return NotFound();
+            ViewBag.Classes = await _db.Classes.ToListAsync();
             return View(user);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditUser(int id, User model, string? newPassword)
+        public async Task<IActionResult> EditUser(int id, User model, string? newPassword, bool mustChangePassword)
         {
             var redirect = RequireAdmin();
             if (redirect != null) return redirect;
@@ -92,8 +175,9 @@ namespace QLTTYKPH.Controllers
 
             user.FullName = model.FullName;
             user.Role = model.Role;
-            user.Class = model.Class;
+            user.ClassId = model.ClassId;
             user.Department = model.Department;
+            user.MustChangePassword = mustChangePassword;
 
             if (!string.IsNullOrWhiteSpace(newPassword))
                 user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
@@ -257,6 +341,74 @@ namespace QLTTYKPH.Controllers
             await _db.SaveChangesAsync();
             TempData["Success"] = "Xóa phòng ban thành công!";
             return RedirectToAction("Departments");
+        }
+
+        // ==================== CLASSES ====================
+        public async Task<IActionResult> Classes()
+        {
+            var redirect = RequireAdmin();
+            if (redirect != null) return redirect;
+            return View(await _db.Classes.ToListAsync());
+        }
+
+        [HttpGet]
+        public IActionResult CreateClass()
+        {
+            var redirect = RequireAdmin();
+            if (redirect != null) return redirect;
+            return View(new Class());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateClass(Class model)
+        {
+            var redirect = RequireAdmin();
+            if (redirect != null) return redirect;
+            if (!ModelState.IsValid) return View(model);
+            _db.Classes.Add(model);
+            await _db.SaveChangesAsync();
+            TempData["Success"] = "Tạo lớp thành công!";
+            return RedirectToAction("Classes");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditClass(int id)
+        {
+            var redirect = RequireAdmin();
+            if (redirect != null) return redirect;
+            var cls = await _db.Classes.FindAsync(id);
+            if (cls == null) return NotFound();
+            return View(cls);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditClass(int id, Class model)
+        {
+            var redirect = RequireAdmin();
+            if (redirect != null) return redirect;
+            var cls = await _db.Classes.FindAsync(id);
+            if (cls == null) return NotFound();
+            cls.Name = model.Name;
+            cls.Description = model.Description;
+            await _db.SaveChangesAsync();
+            TempData["Success"] = "Cập nhật lớp thành công!";
+            return RedirectToAction("Classes");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteClass(int id)
+        {
+            var redirect = RequireAdmin();
+            if (redirect != null) return redirect;
+            var cls = await _db.Classes.FindAsync(id);
+            if (cls == null) return NotFound();
+            _db.Classes.Remove(cls);
+            await _db.SaveChangesAsync();
+            TempData["Success"] = "Xóa lớp thành công!";
+            return RedirectToAction("Classes");
         }
     }
 }

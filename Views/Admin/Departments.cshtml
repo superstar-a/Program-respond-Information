@@ -21,7 +21,7 @@
                         @foreach (var d in Model)
                         {
                             <tr>
-                                <td class="text-muted small">@stt++</td>
+                                <td class="text-muted small">@(stt++)</td>
                                 <td><i class="bi bi-building me-2 text-secondary"></i>@d.Name</td>
                                 <td class="text-center">
                                     <a asp-action="EditDepartment" asp-route-id="@d.Id" class="btn btn-sm btn-outline-primary me-1">

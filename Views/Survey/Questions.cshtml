@@ -2,75 +2,170 @@
 @{
     ViewData["Title"] = "Quản lý câu hỏi";
 }
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <a asp-action="Index" class="btn btn-sm btn-outline-secondary me-2">
-            <i class="bi bi-arrow-left"></i>
-        </a>
-        <span class="fw-bold">Câu hỏi: <span class="text-primary">@Model.Title</span></span>
-    </div>
-    <a asp-action="AddQuestion" asp-route-surveyId="@Model.Id" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-circle me-1"></i>Thêm câu hỏi
-    </a>
-</div>
 
-<div class="card">
-    <div class="card-body p-0">
-        <div class="list-group list-group-flush">
-            @{int i = 1;}
-            @foreach (var q in Model.Questions)
-            {
-                <div class="list-group-item d-flex align-items-start justify-content-between">
-                    <div class="d-flex align-items-start">
-                        <span class="badge bg-primary me-3 mt-1 flex-shrink-0">@i++</span>
-                        <div>
-                            <div class="fw-semibold">@q.Text</div>
-                            <div class="mt-1">
-                                @switch (q.Type)
-                                {
-                                    case QLTTYKPH.Models.QuestionType.Text:
-                                        <span class="badge bg-light text-dark border"><i class="bi bi-input-cursor-text me-1"></i>Văn bản</span>
-                                        break;
-                                    case QLTTYKPH.Models.QuestionType.SingleChoice:
-                                        <span class="badge bg-light text-dark border"><i class="bi bi-record-circle me-1"></i>Chọn một</span>
-                                        break;
-                                    case QLTTYKPH.Models.QuestionType.MultipleChoice:
-                                        <span class="badge bg-light text-dark border"><i class="bi bi-check2-square me-1"></i>Chọn nhiều</span>
-                                        break;
-                                    case QLTTYKPH.Models.QuestionType.Rating:
-                                        <span class="badge bg-light text-dark border"><i class="bi bi-star me-1"></i>Đánh giá 1-5</span>
-                                        break;
-                                }
-                            </div>
+@section Styles {
+    <link href="~/css/google-forms.css" rel="stylesheet" asp-append-version="true" />
+    <style>
+        .gg-card-admin:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            border-left: 6px solid #4285f4;
+        }
+        .gg-card-admin {
+            border-left: 6px solid transparent;
+        }
+    </style>
+}
+
+<div class="gg-main-content">
+    <div class="gg-form-container position-relative">
+        
+        <div class="mb-3 d-flex align-items-center">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i> Quay lại chi tiết
+            </a>
+            <span class="text-muted small">Đang chỉnh sửa khảo sát: <strong class="text-dark">@Model.Title</strong></span>
+        </div>
+
+        <div class="gg-card gg-card-header-top">
+            <div class="gg-card-body">
+                <h1 class="gg-title">@Model.Title</h1>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="gg-desc">@Model.Description</p>
+                }
+            </div>
+        </div>
+
+        @{int i = 1;}
+        @foreach (var q in Model.Questions)
+        {
+            <div class="gg-card gg-card-admin">
+                <div class="gg-card-body pb-2">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="gg-question-title mb-0">
+                            <span>@(i++). @q.Text</span>
+                        </div>
+                        <span class="badge bg-light text-secondary border">
+                            @switch (q.Type)
+                            {
+                                case QLTTYKPH.Models.QuestionType.Text:
+                                    <i class="bi bi-input-cursor-text me-1"></i><text>Trả lời ngắn</text>;
+                                    break;
+                                case QLTTYKPH.Models.QuestionType.SingleChoice:
+                                    <i class="bi bi-record-circle me-1"></i><text>Trắc nghiệm</text>;
+                                    break;
+                                case QLTTYKPH.Models.QuestionType.MultipleChoice:
+                                    <i class="bi bi-check2-square me-1"></i><text>Hộp kiểm</text>;
+                                    break;
+                                case QLTTYKPH.Models.QuestionType.Rating:
+                                    <i class="bi bi-star me-1"></i><text>Phạm vi tuyến tính (1-5)</text>;
+                                    break;
+                            }
+                        </span>
+                    </div>
+
+                    @if (q.Type == QLTTYKPH.Models.QuestionType.Text)
+                    {
+                        <div class="mb-3">
+                            <input type="text" class="gg-input-text w-75 text-muted" placeholder="Văn bản câu trả lời ngắn" disabled />
+                        </div>
+                    }
+                    else if (q.Type == QLTTYKPH.Models.QuestionType.SingleChoice)
+                    {
+                        <div class="mt-2 mb-3 text-muted">
                             @if (!string.IsNullOrEmpty(q.Options))
                             {
-                                <div class="mt-1 small text-muted">
-                                    Lựa chọn: @string.Join(" | ", q.Options.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(o => o.Trim()))
-                                </div>
+                                foreach (var opt in q.Options.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <div class="gg-option-row">
+                                        <i class="bi bi-circle me-2"></i> @opt.Trim()
+                                    </div>
+                                }
                             }
                         </div>
-                    </div>
-                    <div class="d-flex gap-1 ms-3">
-                        <a asp-action="EditQuestion" asp-route-id="@q.Id" class="btn btn-sm btn-outline-primary">
+                    }
+                    else if (q.Type == QLTTYKPH.Models.QuestionType.MultipleChoice)
+                    {
+                        <div class="mt-2 mb-3 text-muted">
+                            @if (!string.IsNullOrEmpty(q.Options))
+                            {
+                                foreach (var opt in q.Options.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <div class="gg-option-row">
+                                        <i class="bi bi-square me-2"></i> @opt.Trim()
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                    else if (q.Type == QLTTYKPH.Models.QuestionType.Rating)
+                    {
+                        <div class="gg-rating-scale text-muted w-75 ms-0 mt-3 mb-3">
+                            <div class="gg-rating-option"><span>1</span><i class="bi bi-circle"></i></div>
+                            <div class="gg-rating-option"><span>2</span><i class="bi bi-circle"></i></div>
+                            <div class="gg-rating-option"><span>3</span><i class="bi bi-circle"></i></div>
+                            <div class="gg-rating-option"><span>4</span><i class="bi bi-circle"></i></div>
+                            <div class="gg-rating-option"><span>5</span><i class="bi bi-circle"></i></div>
+                        </div>
+                    }
+
+                    <div class="gg-actions">
+                        <form asp-action="MoveQuestionUp" asp-route-id="@q.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="gg-icon-btn" title="Di chuyển lên">
+                                <i class="bi bi-arrow-up"></i>
+                            </button>
+                        </form>
+                        <form asp-action="MoveQuestionDown" asp-route-id="@q.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="gg-icon-btn" title="Di chuyển xuống">
+                                <i class="bi bi-arrow-down"></i>
+                            </button>
+                        </form>
+                        <a asp-action="EditQuestion" asp-route-id="@q.Id" class="gg-icon-btn text-primary" title="Chỉnh sửa câu hỏi">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <form asp-action="DeleteQuestion" asp-route-id="@q.Id" method="post"
-                              onsubmit="return confirm('Xóa câu hỏi này?')">
+                        <form asp-action="DeleteQuestion" asp-route-id="@q.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <button type="submit" class="gg-icon-btn text-danger" title="Xóa câu hỏi">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </form>
                     </div>
                 </div>
-            }
-            @if (!Model.Questions.Any())
-            {
-                <div class="list-group-item text-center text-muted py-5">
-                    <i class="bi bi-question-circle fs-2 d-block mb-2"></i>
-                    Chưa có câu hỏi nào. Nhấn "Thêm câu hỏi" để bắt đầu.
-                </div>
-            }
+            </div>
+        }
+
+        @if (!Model.Questions.Any())
+        {
+            <div class="gg-card p-5 text-center text-muted">
+                <i class="bi bi-question-circle fs-1 mb-3 text-secondary"></i>
+                <p>Chưa có câu hỏi nào trong khảo sát này.</p>
+                <p>Nhấp vào nút dấu cộng bên dưới để thêm câu hỏi đầu tiên.</p>
+            </div>
+        }
+
+        <!-- Add Question Floating Action or Bottom Button -->
+        <div class="text-center mt-4 mb-5">
+            <a asp-action="AddQuestion" asp-route-surveyId="@Model.Id" class="gg-btn-outline d-inline-flex align-items-center gap-2">
+                <i class="bi bi-plus-circle-fill fs-5"></i>
+                <span>Thêm câu hỏi mới</span>
+            </a>
         </div>
+        
+        <!-- Optional Floating Toolbar for large screens -->
+        <div class="gg-floating-toolbar d-none d-lg-flex">
+            <a asp-action="AddQuestion" asp-route-surveyId="@Model.Id" class="gg-icon-btn text-primary" title="Thêm câu hỏi">
+                <i class="bi bi-plus-circle-fill"></i>
+            </a>
+            <form asp-action="ResequenceQuestions" asp-route-surveyId="@Model.Id" method="post" class="m-0 p-0">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="gg-icon-btn text-warning" title="Cập nhật thứ tự hiển thị">
+                    <i class="bi bi-sort-numeric-down"></i>
+                </button>
+            </form>
+        </div>
+
     </div>
 </div>

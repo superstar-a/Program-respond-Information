@@ -35,7 +35,7 @@ else
                     @foreach (var f in Model)
                     {
                         <tr>
-                            <td class="text-muted small">@stt++</td>
+                            <td class="text-muted small">@(stt++)</td>
                             <td class="fw-semibold">@f.Survey?.Title</td>
                             <td class="small text-muted">@f.SubmittedAt?.ToString("dd/MM/yyyy HH:mm")</td>
                             <td class="text-center">

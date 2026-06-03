@@ -1,0 +1,62 @@
+@model QLTTYKPH.Models.Complaint
+@{
+    ViewData["Title"] = "Gửi khiếu nại mới";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-send-fill me-2"></i>Gửi khiếu nại mới
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold">Tiêu đề khiếu nại</label>
+                        <input asp-for="Title" class="form-control" placeholder="Nhập tóm tắt tiêu đề khiếu nại" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DepartmentId" class="form-label fw-semibold">Phòng ban tiếp nhận</label>
+                        <select asp-for="DepartmentId" class="form-select">
+                            <option value="">-- Chọn phòng ban giải quyết khiếu nại --</option>
+                            @foreach (var d in (List<QLTTYKPH.Models.Department>)ViewBag.Departments)
+                            {
+                                <option value="@d.Id">@d.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                        <div class="form-text">Khiếu nại của bạn sẽ được gửi trực tiếp đến cán bộ phụ trách phòng ban này.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Content" class="form-label fw-semibold">Nội dung khiếu nại chi tiết</label>
+                        <textarea asp-for="Content" rows="6" class="form-control" placeholder="Trình bày chi tiết sự việc, lý do khiếu nại..."></textarea>
+                        <span asp-validation-for="Content" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        <input asp-for="IsAnonymous" class="form-check-input" />
+                        <label asp-for="IsAnonymous" class="form-check-label fw-semibold text-danger">Gửi ẩn danh</label>
+                        <div class="form-text">Khi chọn ẩn danh, người tiếp nhận (Admin/Phòng ban) sẽ không thể thấy tên và lớp của bạn.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-1"></i>Gửi khiếu nại
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

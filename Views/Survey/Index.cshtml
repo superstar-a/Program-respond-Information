@@ -34,6 +34,15 @@
                 </select>
             </div>
             <div class="col-md-2">
+                <select name="classId" class="form-select form-select-sm">
+                    <option value="">-- Lớp --</option>
+                    @foreach (var c in (List<QLTTYKPH.Models.Class>)ViewBag.Classes)
+                    {
+                        <option value="@c.Id" selected="@(ViewBag.ClassId != null && ViewBag.ClassId.ToString() == c.Id.ToString())">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
                 <select name="isPublished" class="form-select form-select-sm">
                     <option value="">-- Trạng thái --</option>
                     <option value="true" selected="@(ViewBag.IsPublished != null && ViewBag.IsPublished.ToString() == "True")">Đang mở</option>
@@ -68,13 +77,13 @@
                     @foreach (var s in Model)
                     {
                         <tr>
-                            <td class="text-muted small">@stt++</td>
+                            <td class="text-muted small">@(stt++)</td>
                             <td>
                                 <a asp-action="Details" asp-route-id="@s.Id" class="fw-semibold text-decoration-none">@s.Title</a>
                             </td>
                             <td><span class="badge bg-info text-dark">@(s.Category?.Name ?? "-")</span></td>
                             <td class="small text-muted">@(s.Department?.Name ?? "-")</td>
-                            <td class="small">@(string.IsNullOrEmpty(s.ClassTarget) ? "Tất cả" : s.ClassTarget)</td>
+                            <td class="small">@(s.Class?.Name ?? "Tất cả")</td>
                             <td class="text-center">
                                 @if (s.IsPublished)
                                 {

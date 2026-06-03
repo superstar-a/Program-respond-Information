@@ -1,0 +1,143 @@
+@model QLTTYKPH.Models.Complaint
+@{
+    var role = Context.Session.GetString("UserRole");
+    ViewData["Title"] = "Chi tiết khiếu nại";
+}
+
+<div class="mb-3">
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-text me-2"></i>Nội dung khiếu nại</span>
+                <span class="badge @(Model.Status == QLTTYKPH.Models.ComplaintStatus.New ? "bg-danger" : Model.Status == QLTTYKPH.Models.ComplaintStatus.Processing ? "bg-warning text-dark" : "bg-success")">
+                    @switch (Model.Status)
+                    {
+                        case QLTTYKPH.Models.ComplaintStatus.New:
+                            @:Mới
+                            break;
+                        case QLTTYKPH.Models.ComplaintStatus.Processing:
+                            @:Đang xử lý
+                            break;
+                        case QLTTYKPH.Models.ComplaintStatus.Resolved:
+                            @:Đã giải quyết
+                            break;
+                    }
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <h4 class="fw-bold mb-3 text-dark">@Model.Title</h4>
+                <hr />
+                <div class="mb-4 text-secondary" style="white-space: pre-line; line-height: 1.6;">
+                    @Model.Content
+                </div>
+                <hr />
+                <div class="row g-2 text-muted small">
+                    <div class="col-sm-6">
+                        <i class="bi bi-calendar-event me-1"></i>Thời gian gửi: <strong>@Model.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+                    <div class="col-sm-6 text-sm-end">
+                        <i class="bi bi-building me-1"></i>Gửi tới: <strong>@Model.Department?.Name</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.ResolutionNote))
+        {
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-reply-fill me-2"></i>Thông tin phản hồi từ phòng ban
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-dark mb-3" style="white-space: pre-line; line-height: 1.6;">
+                        @Model.ResolutionNote
+                    </div>
+                    <hr />
+                    <div class="row g-2 text-muted small">
+                        <div class="col-sm-6">
+                            <i class="bi bi-person-fill me-1"></i>Người phản hồi: <strong>@(Model.ResolvedByUser?.FullName ?? "Cán bộ phòng ban")</strong>
+                        </div>
+                        @if (Model.ResolvedAt.HasValue)
+                        {
+                            <div class="col-sm-6 text-sm-end">
+                                <i class="bi bi-clock-fill me-1"></i>Thời gian: <strong>@Model.ResolvedAt.Value.ToString("dd/MM/yyyy HH:mm")</strong>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <i class="bi bi-info-circle me-2"></i>Thông tin liên quan
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush mb-0">
+                    @if (Model.IsAnonymous && role != "Student")
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Học sinh khiếu nại</span>
+                            <span class="badge bg-secondary"><i class="bi bi-incognito me-1"></i>Ẩn danh</span>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Học sinh khiếu nại</span>
+                            <strong>@Model.User?.FullName</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Mã sinh viên</span>
+                            <strong>@Model.User?.Username</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Lớp</span>
+                            <strong>@(Model.User?.Class?.Name ?? "-")</strong>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        @if (role == "Admin" || role == "Staff")
+        {
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-check2-square me-2"></i>Cập nhật tiến trình & Giải quyết
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Process" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nội dung phản hồi / Giải quyết</label>
+                            <textarea name="resolutionNote" rows="5" class="form-control" placeholder="Nhập câu trả lời, hướng giải quyết khiếu nại... (Bắt buộc)">@Model.ResolutionNote</textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Cập nhật trạng thái</label>
+                            <select name="newStatus" class="form-select">
+                                <option value="Processing" selected="@(Model.Status == QLTTYKPH.Models.ComplaintStatus.Processing)">Đang xử lý</option>
+                                <option value="Resolved" selected="@(Model.Status == QLTTYKPH.Models.ComplaintStatus.Resolved)">Đã giải quyết (Hoàn thành)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-arrow-right-circle me-1"></i>Lưu phản hồi & Cập nhật
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>

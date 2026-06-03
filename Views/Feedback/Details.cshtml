@@ -15,7 +15,7 @@
     <div class="col-md-8">
         <div class="card mb-3">
             <div class="card-header bg-primary text-white d-flex justify-content-between">
-                <span><i class="bi bi-person-circle me-2"></i>@Model.User?.FullName (@(Model.User?.Class ?? "-"))</span>
+                <span><i class="bi bi-person-circle me-2"></i>@Model.User?.FullName (@(Model.User?.Class?.Name ?? "-"))</span>
                 @switch (Model.Status)
                 {
                     case QLTTYKPH.Models.FeedbackStatus.New:
