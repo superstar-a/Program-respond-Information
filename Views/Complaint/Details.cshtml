@@ -36,6 +36,36 @@
                 <div class="mb-4 text-secondary" style="white-space: pre-line; line-height: 1.6;">
                     @Model.Content
                 </div>
+                
+                @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                {
+                    <div class="mb-4">
+                        <p class="fw-semibold mb-2"><i class="bi bi-paperclip me-1"></i>Tệp đính kèm / Minh chứng:</p>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var path in Model.AttachmentPath.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                var ext = System.IO.Path.GetExtension(path).ToLower();
+                                if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
+                                {
+                                    <div class="mb-2">
+                                        <a href="@path" target="_blank">
+                                            <img src="@path" alt="Ảnh minh chứng" class="img-fluid rounded border" style="max-height: 200px;" />
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div>
+                                        <a href="@path" download class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-download me-1"></i>Tải @System.IO.Path.GetFileName(path)
+                                        </a>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+
                 <hr />
                 <div class="row g-2 text-muted small">
                     <div class="col-sm-6">
@@ -58,6 +88,36 @@
                     <div class="text-dark mb-3" style="white-space: pre-line; line-height: 1.6;">
                         @Model.ResolutionNote
                     </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.ResolutionAttachmentPath))
+                    {
+                        <div class="mb-3">
+                            <p class="fw-semibold mb-2"><i class="bi bi-paperclip me-1"></i>Tệp minh chứng giải quyết:</p>
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach (var path in Model.ResolutionAttachmentPath.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    var resExt = System.IO.Path.GetExtension(path).ToLower();
+                                    if (resExt == ".jpg" || resExt == ".jpeg" || resExt == ".png")
+                                    {
+                                        <div class="mb-2">
+                                            <a href="@path" target="_blank">
+                                                <img src="@path" alt="Ảnh giải quyết" class="img-fluid rounded border" style="max-height: 200px;" />
+                                            </a>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div>
+                                            <a href="@path" download class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-download me-1"></i>Tải @System.IO.Path.GetFileName(path)
+                                            </a>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+
                     <hr />
                     <div class="row g-2 text-muted small">
                         <div class="col-sm-6">
@@ -115,13 +175,19 @@
                     <i class="bi bi-check2-square me-2"></i>Cập nhật tiến trình & Giải quyết
                 </div>
                 <div class="card-body p-4">
-                    <form asp-action="Process" method="post">
+                    <form asp-action="Process" method="post" enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" value="@Model.Id" />
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nội dung phản hồi / Giải quyết</label>
                             <textarea name="resolutionNote" rows="5" class="form-control" placeholder="Nhập câu trả lời, hướng giải quyết khiếu nại... (Bắt buộc)">@Model.ResolutionNote</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="attachments" class="form-label fw-semibold">Tải lên tệp minh chứng (Ảnh, PDF, Word, Excel - Tối đa 5MB)</label>
+                            <input type="file" name="attachments" id="attachments" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" multiple onchange="previewImages(this, 'imagePreviewContainer')" />
+                            <div id="imagePreviewContainer" class="d-flex flex-wrap gap-3 mt-3"></div>
                         </div>
 
                         <div class="mb-4">
@@ -139,5 +205,38 @@
                 </div>
             </div>
         }
+
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function previewImages(input, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = ''; 
+            const files = input.files;
+            if (!files) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-fluid rounded border shadow-sm';
+                        img.style.maxHeight = '400px'; 
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    const span = document.createElement('span');
+                    span.className = 'badge bg-secondary p-2';
+                    span.textContent = 'Đã chọn tệp: ' + file.name;
+                    container.appendChild(span);
+                }
+            }
+        }
+    </script>
+}

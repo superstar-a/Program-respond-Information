@@ -60,5 +60,11 @@ namespace QLTTYKPH.Models
 
         [ForeignKey("ResolvedByUserId")]
         public User? ResolvedByUser { get; set; }
+
+        [Display(Name = "Tệp đính kèm (Sinh viên)")]
+        public string? AttachmentPath { get; set; }
+
+        [Display(Name = "Tệp minh chứng (Phòng ban)")]
+        public string? ResolutionAttachmentPath { get; set; }
     }
 }

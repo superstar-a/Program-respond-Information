@@ -9,17 +9,48 @@
                 <i class="bi bi-pencil-square me-2"></i>Sửa khảo sát
             </div>
             <div class="card-body p-4">
-                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div class="mb-3">
                         <label asp-for="Title" class="form-label fw-semibold"></label>
                         <input asp-for="Title" class="form-control" />
                         <span asp-validation-for="Title" class="text-danger small"></span>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label asp-for="Description" class="form-label fw-semibold"></label>
-                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả mục đích, yêu cầu khảo sát..."></textarea>
                     </div>
+
+                    <div class="mb-4">
+                        <label for="attachment" class="form-label fw-semibold">Tải lên tệp đính kèm (Ảnh, PDF, Word, Excel - Tối đa 5MB)</label>
+                        @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                        {
+                            <div class="mb-2">
+                                <p class="mb-1 text-muted small">Các tệp đính kèm hiện tại:</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var path in Model.AttachmentPath.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        var ext = System.IO.Path.GetExtension(path).ToLower();
+                                        if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
+                                        {
+                                            <a href="@path" target="_blank">
+                                                <img src="@path" alt="Ảnh đính kèm" class="img-fluid rounded border mb-2" style="max-height: 100px; display: block;" />
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a href="@path" download class="badge bg-info text-dark text-decoration-none p-2 mb-2 d-inline-block">
+                                                <i class="bi bi-download"></i> Tải @System.IO.Path.GetFileName(path)
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                            <div class="form-text">Tải lên tệp mới nếu bạn muốn thay thế tệp cũ. Tệp cũ sẽ bị xóa khỏi dữ liệu khảo sát.</div>
+                        }
+                        <input type="file" name="attachments" id="attachments" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" multiple onchange="previewImages(this, 'imagePreviewContainer')" />
+                    </div>
+
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label asp-for="CategoryId" class="form-label fw-semibold"></label>
@@ -42,28 +73,17 @@
                             </select>
                         </div>
                     </div>
-                    <div class="row g-3 mb-4">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label asp-for="StartDate" class="form-label fw-semibold"></label>
+                            <label asp-for="StartDate" class="form-label fw-semibold">Thời gian mở</label>
                             <input asp-for="StartDate" class="form-control" type="datetime-local" />
                             <span asp-validation-for="StartDate" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="EndDate" class="form-label fw-semibold"></label>
+                            <label asp-for="EndDate" class="form-label fw-semibold">Thời gian kết thúc</label>
                             <input asp-for="EndDate" class="form-control" type="datetime-local" />
                             <span asp-validation-for="EndDate" class="text-danger small"></span>
                         </div>
-                    </div>
-                    <div class="mb-4">
-                        <label asp-for="ClassId" class="form-label fw-semibold"></label>
-                        <select asp-for="ClassId" class="form-select">
-                            <option value="">Tất cả các lớp</option>
-                            @foreach (var cls in (List<QLTTYKPH.Models.Class>)ViewBag.Classes)
-                            {
-                                <option value="@cls.Id" selected="@(Model.ClassId == cls.Id)">@cls.Name</option>
-                            }
-                        </select>
-                        <div class="form-text">Chọn lớp mục tiêu. Để trống = tất cả sinh viên</div>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-warning text-dark">
@@ -82,6 +102,34 @@
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
+        function previewImages(input, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = ''; 
+            const files = input.files;
+            if (!files) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-fluid rounded border shadow-sm';
+                        img.style.maxHeight = '400px'; 
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    const span = document.createElement('span');
+                    span.className = 'badge bg-secondary p-2';
+                    span.textContent = 'Đã chọn tệp: ' + file.name;
+                    container.appendChild(span);
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             var startDateInput = document.getElementById('StartDate');
             var endDateInput = document.getElementById('EndDate');

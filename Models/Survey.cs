@@ -33,6 +33,9 @@ namespace QLTTYKPH.Models
         [Display(Name = "Thời gian kết thúc")]
         public DateTime? EndDate { get; set; }
 
+        [Display(Name = "Tệp đính kèm")]
+        public string? AttachmentPath { get; set; }
+
         [Display(Name = "Lớp mục tiêu")]
         public int? ClassId { get; set; }
 

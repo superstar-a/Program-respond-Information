@@ -16,12 +16,15 @@
     }
 </div>
 
-@if (role == "Admin")
-{
-    <div class="card mb-3">
-        <div class="card-body py-2">
-            <form method="get" class="row g-2 align-items-center">
-                <div class="col-md-4">
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="search" value="@ViewBag.Search" class="form-control form-control-sm" placeholder="Tìm tiêu đề, tên sinh viên..." />
+            </div>
+            @if (role == "Admin")
+            {
+                <div class="col-md-3">
                     <select name="departmentId" class="form-select form-select-sm">
                         <option value="">-- Tất cả phòng ban tiếp nhận --</option>
                         @foreach (var d in (List<QLTTYKPH.Models.Department>)ViewBag.Departments)
@@ -30,6 +33,9 @@
                         }
                     </select>
                 </div>
+            }
+            @if (role != "Student")
+            {
                 <div class="col-md-3">
                     <select name="status" class="form-select form-select-sm">
                         <option value="">-- Tất cả trạng thái --</option>
@@ -38,14 +44,14 @@
                         <option value="Resolved" selected="@(ViewBag.Status == "Resolved")">Đã giải quyết</option>
                     </select>
                 </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Lọc</button>
-                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-1">Xóa lọc</a>
-                </div>
-            </form>
-        </div>
+            }
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Lọc</button>
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-1">Xóa lọc</a>
+            </div>
+        </form>
     </div>
-}
+</div>
 
 <div class="card">
     <div class="card-body p-0">

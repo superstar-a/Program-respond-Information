@@ -9,10 +9,12 @@ namespace QLTTYKPH.Controllers
     public class SurveyController : Controller
     {
         private readonly AppDbContext _db;
+        private readonly IWebHostEnvironment _env;
 
-        public SurveyController(AppDbContext db)
+        public SurveyController(AppDbContext db, IWebHostEnvironment env)
         {
             _db = db;
+            _env = env;
         }
 
         private IActionResult RequireStaffOrAdmin()
@@ -29,11 +31,20 @@ namespace QLTTYKPH.Controllers
             var redirect = RequireStaffOrAdmin();
             if (redirect != null) return redirect;
 
+            bool isAdmin = SessionHelper.IsAdmin(HttpContext.Session);
+            int? sessionDeptId = HttpContext.Session.GetInt32("DepartmentId");
+
             var query = _db.Surveys
                 .Include(s => s.Category)
                 .Include(s => s.Department)
                 .Include(s => s.Class)
                 .AsQueryable();
+
+            if (!isAdmin && sessionDeptId.HasValue)
+            {
+                query = query.Where(s => s.DepartmentId == sessionDeptId.Value);
+                departmentId = sessionDeptId.Value;
+            }
 
             if (!string.IsNullOrWhiteSpace(search))
                 query = query.Where(s => s.Title.Contains(search));
@@ -78,7 +89,7 @@ namespace QLTTYKPH.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Survey model)
+        public async Task<IActionResult> Create(Survey model, List<IFormFile> attachments)
         {
             var redirect = RequireStaffOrAdmin();
             if (redirect != null) return redirect;
@@ -90,6 +101,22 @@ namespace QLTTYKPH.Controllers
 
             if (!ModelState.IsValid)
             {
+                ViewBag.Categories = await _db.Categories.ToListAsync();
+                ViewBag.Departments = await _db.Departments.ToListAsync();
+                ViewBag.Classes = await _db.Classes.ToListAsync();
+                return View(model);
+            }
+
+            try
+            {
+                if (attachments != null && attachments.Count > 0)
+                {
+                    model.AttachmentPath = await FileHelper.UploadMultipleFilesAsync(attachments, "surveys", _env.WebRootPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("AttachmentPath", ex.Message);
                 ViewBag.Categories = await _db.Categories.ToListAsync();
                 ViewBag.Departments = await _db.Departments.ToListAsync();
                 ViewBag.Classes = await GetClassListAsync();
@@ -120,13 +147,12 @@ namespace QLTTYKPH.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Survey model)
+        public async Task<IActionResult> Edit(int id, Survey model, List<IFormFile> attachments)
         {
             var redirect = RequireStaffOrAdmin();
             if (redirect != null) return redirect;
 
-            var survey = await _db.Surveys.FindAsync(id);
-            if (survey == null) return NotFound();
+            if (id != model.Id) return NotFound();
 
             if (model.StartDate.HasValue && model.EndDate.HasValue && model.EndDate <= model.StartDate)
             {
@@ -135,6 +161,25 @@ namespace QLTTYKPH.Controllers
 
             if (!ModelState.IsValid)
             {
+                ViewBag.Categories = await _db.Categories.ToListAsync();
+                ViewBag.Departments = await _db.Departments.ToListAsync();
+                ViewBag.Classes = await GetClassListAsync();
+                return View(model);
+            }
+
+            var survey = await _db.Surveys.FindAsync(id);
+            if (survey == null) return NotFound();
+
+            try
+            {
+                if (attachments != null && attachments.Count > 0)
+                {
+                    survey.AttachmentPath = await FileHelper.UploadMultipleFilesAsync(attachments, "surveys", _env.WebRootPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("AttachmentPath", ex.Message);
                 ViewBag.Categories = await _db.Categories.ToListAsync();
                 ViewBag.Departments = await _db.Departments.ToListAsync();
                 ViewBag.Classes = await GetClassListAsync();
@@ -165,7 +210,8 @@ namespace QLTTYKPH.Controllers
             _db.Surveys.Remove(survey);
             await _db.SaveChangesAsync();
             TempData["Success"] = "Xóa khảo sát thành công!";
-            return RedirectToAction("Index");
+            var referer = Request.Headers["Referer"].ToString();
+            return !string.IsNullOrEmpty(referer) ? Redirect(referer) : RedirectToAction("Index");
         }
 
         [HttpPost]
@@ -189,7 +235,8 @@ namespace QLTTYKPH.Controllers
             }
             await _db.SaveChangesAsync();
             TempData["Success"] = survey.IsPublished ? "Khảo sát đã được xuất bản!" : "Khảo sát đã đóng!";
-            return RedirectToAction("Index");
+            var referer = Request.Headers["Referer"].ToString();
+            return !string.IsNullOrEmpty(referer) ? Redirect(referer) : RedirectToAction("Index");
         }
 
         // ==================== QUESTIONS ====================
@@ -219,13 +266,28 @@ namespace QLTTYKPH.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddQuestion(Question model)
+        public async Task<IActionResult> AddQuestion(Question model, List<IFormFile> attachments)
         {
             var redirect = RequireStaffOrAdmin();
             if (redirect != null) return redirect;
 
             if (!ModelState.IsValid)
             {
+                var survey = await _db.Surveys.FindAsync(model.SurveyId);
+                ViewBag.SurveyTitle = survey?.Title;
+                return View(model);
+            }
+
+            try
+            {
+                if (attachments != null && attachments.Count > 0)
+                {
+                    model.AttachmentPath = await FileHelper.UploadMultipleFilesAsync(attachments, "questions", _env.WebRootPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("AttachmentPath", ex.Message);
                 var survey = await _db.Surveys.FindAsync(model.SurveyId);
                 ViewBag.SurveyTitle = survey?.Title;
                 return View(model);
@@ -330,13 +392,36 @@ namespace QLTTYKPH.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditQuestion(int id, Question model)
+        public async Task<IActionResult> EditQuestion(int id, Question model, List<IFormFile> attachments)
         {
             var redirect = RequireStaffOrAdmin();
             if (redirect != null) return redirect;
 
             var question = await _db.Questions.FindAsync(id);
             if (question == null) return NotFound();
+
+            if (!ModelState.IsValid)
+            {
+                var survey = await _db.Surveys.FindAsync(question.SurveyId);
+                ViewBag.SurveyTitle = survey?.Title;
+                return View(model);
+            }
+
+            try
+            {
+                if (attachments != null && attachments.Count > 0)
+                {
+                    question.AttachmentPath = await FileHelper.UploadMultipleFilesAsync(attachments, "questions", _env.WebRootPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("AttachmentPath", ex.Message);
+                var survey = await _db.Surveys.FindAsync(question.SurveyId);
+                ViewBag.SurveyTitle = survey?.Title;
+                return View(model);
+            }
+
             question.Text = model.Text;
             question.Type = model.Type;
             question.Options = model.Options;

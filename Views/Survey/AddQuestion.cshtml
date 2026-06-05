@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <form asp-action="AddQuestion" method="post" id="questionForm">
+        <form asp-action="AddQuestion" method="post" enctype="multipart/form-data" id="questionForm">
             @Html.AntiForgeryToken()
             <input asp-for="SurveyId" type="hidden" />
             
@@ -49,6 +49,13 @@
                     <!-- Hidden textarea for backend compatibility -->
                     <textarea asp-for="Options" id="hiddenOptions" style="display:none;"></textarea>
                     <span asp-validation-for="Options" class="text-danger small mt-1 d-block"></span>
+
+                    <div class="mb-4">
+                        <label for="attachments" class="form-label fw-semibold">Tải lên Ảnh / Minh họa cho câu hỏi (Tối đa 5MB)</label>
+                        <input type="file" name="attachments" id="attachments" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" multiple onchange="previewImages(this, 'imagePreviewContainer')" />
+                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-2"></div>
+                        <div class="form-text">Sinh viên sẽ nhìn thấy ảnh/tài liệu này ngay bên dưới câu hỏi.</div>
+                    </div>
 
                     <!-- Dynamic Options Container -->
                     <div id="dynamicOptionsContainer" style="display:none">
@@ -148,24 +155,55 @@
             }
         }
 
-        // On form submit, gather all dynamic inputs into the hidden textarea
+        // On form submit, gather all dynamic inputs
         questionForm.addEventListener('submit', function (e) {
-            const type = questionType.value;
-            if (type === '1' || type === '2') {
+            if (questionType.value === '1' || questionType.value === '2') {
                 const inputs = optionsList.querySelectorAll('.option-val');
-                const values = Array.from(inputs).map(inp => inp.value.trim()).filter(val => val !== '');
+                let optsArray = [];
+                inputs.forEach(input => {
+                    const val = input.value.trim();
+                    if (val) optsArray.push(val);
+                });
                 
-                if (values.length < 2) {
+                if (optsArray.length < 2) {
                     e.preventDefault();
                     alert('Vui lòng thêm ít nhất 2 tùy chọn.');
                     return;
                 }
                 
-                hiddenOptions.value = values.join('\n');
+                hiddenOptions.value = optsArray.join('\n');
             } else {
                 hiddenOptions.value = '';
             }
         });
+
+        function previewImages(input, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = ''; 
+            const files = input.files;
+            if (!files) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-fluid rounded border shadow-sm';
+                        img.style.maxHeight = '400px'; 
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    const span = document.createElement('span');
+                    span.className = 'badge bg-secondary p-2';
+                    span.textContent = 'Đã chọn tệp: ' + file.name;
+                    container.appendChild(span);
+                }
+            }
+        }
 
         // Initialize
         toggleOptions();

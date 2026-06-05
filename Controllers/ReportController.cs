@@ -26,18 +26,47 @@ namespace QLTTYKPH.Controllers
             return null!;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, int? categoryId, int? departmentId, int? classId, bool? isPublished)
         {
             var redirect = RequireStaffOrAdmin();
             if (redirect != null) return redirect;
 
+            bool isAdmin = SessionHelper.IsAdmin(HttpContext.Session);
+            int? sessionDeptId = HttpContext.Session.GetInt32("DepartmentId");
+
+            var query = _db.Surveys
+                .Include(s => s.Feedbacks)
+                .Include(s => s.Category)
+                .AsQueryable();
+
+            if (!isAdmin && sessionDeptId.HasValue)
+            {
+                query = query.Where(s => s.DepartmentId == sessionDeptId.Value);
+                // Cố định bộ lọc phòng ban cho Staff
+                departmentId = sessionDeptId.Value;
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(s => s.Title.Contains(search));
+            if (categoryId.HasValue)
+                query = query.Where(s => s.CategoryId == categoryId);
+            if (departmentId.HasValue)
+                query = query.Where(s => s.DepartmentId == departmentId);
+            if (classId.HasValue)
+                query = query.Where(s => s.ClassId == classId);
+            if (isPublished.HasValue)
+                query = query.Where(s => s.IsPublished == isPublished);
+
+            var filteredSurveys = await query.ToListAsync();
+            var allFeedbacksInSurveys = filteredSurveys.SelectMany(s => s.Feedbacks).ToList();
+
             var vm = new ReportViewModel
             {
-                TotalFeedbacks = await _db.Feedbacks.CountAsync(),
-                NewFeedbacks = await _db.Feedbacks.CountAsync(f => f.Status == FeedbackStatus.New),
-                ProcessingFeedbacks = await _db.Feedbacks.CountAsync(f => f.Status == FeedbackStatus.Processing),
-                CompletedFeedbacks = await _db.Feedbacks.CountAsync(f => f.Status == FeedbackStatus.Completed),
-                SurveyStats = await _db.Surveys
+                TotalFeedbacks = allFeedbacksInSurveys.Count,
+                NewFeedbacks = allFeedbacksInSurveys.Count(f => f.Status == FeedbackStatus.New),
+                ProcessingFeedbacks = allFeedbacksInSurveys.Count(f => f.Status == FeedbackStatus.Processing),
+                CompletedFeedbacks = allFeedbacksInSurveys.Count(f => f.Status == FeedbackStatus.Completed),
+                SurveyStats = filteredSurveys
                     .Select(s => new SurveyStatItem
                     {
                         SurveyId = s.Id,
@@ -46,17 +75,30 @@ namespace QLTTYKPH.Controllers
                         CompletedCount = s.Feedbacks.Count(f => f.Status == FeedbackStatus.Completed)
                     })
                     .OrderByDescending(x => x.FeedbackCount)
-                    .ToListAsync(),
-                CategoryStats = await _db.Categories
+                    .ToList(),
+                CategoryStats = _db.Categories.ToList()
                     .Select(c => new CategoryStatItem
                     {
                         CategoryId = c.Id,
                         CategoryName = c.Name,
-                        FeedbackCount = c.Surveys.SelectMany(s => s.Feedbacks).Count()
+                        FeedbackCount = filteredSurveys.Where(s => s.CategoryId == c.Id).SelectMany(s => s.Feedbacks).Count()
                     })
+                    .Where(c => c.FeedbackCount > 0)
                     .OrderByDescending(x => x.FeedbackCount)
-                    .ToListAsync()
+                    .ToList()
             };
+
+            // Dữ liệu cho View filter
+            ViewBag.Categories = await _db.Categories.ToListAsync();
+            ViewBag.Departments = await _db.Departments.ToListAsync();
+            ViewBag.Classes = await _db.Classes.ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.CategoryId = categoryId;
+            ViewBag.DepartmentId = departmentId;
+            ViewBag.ClassId = classId;
+            ViewBag.IsPublished = isPublished;
+            ViewBag.IsAdmin = isAdmin;
 
             return View(vm);
         }

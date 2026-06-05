@@ -21,10 +21,22 @@ namespace QLTTYKPH.Controllers
             if (!SessionHelper.IsLoggedIn(HttpContext.Session))
                 return RedirectToAction("Login", "Account");
 
-            ViewBag.TotalSurveys = await _db.Surveys.CountAsync();
-            ViewBag.PublishedSurveys = await _db.Surveys.CountAsync(s => s.IsPublished);
-            ViewBag.TotalFeedbacks = await _db.Feedbacks.CountAsync();
-            ViewBag.NewFeedbacks = await _db.Feedbacks.CountAsync(f => f.Status == FeedbackStatus.New);
+            bool isAdmin = SessionHelper.IsAdmin(HttpContext.Session);
+            int? deptId = HttpContext.Session.GetInt32("DepartmentId");
+
+            var surveysQuery = _db.Surveys.AsQueryable();
+            var feedbacksQuery = _db.Feedbacks.Include(f => f.Survey).AsQueryable();
+
+            if (!isAdmin && deptId.HasValue)
+            {
+                surveysQuery = surveysQuery.Where(s => s.DepartmentId == deptId.Value);
+                feedbacksQuery = feedbacksQuery.Where(f => f.Survey != null && f.Survey.DepartmentId == deptId.Value);
+            }
+
+            ViewBag.TotalSurveys = await surveysQuery.CountAsync();
+            ViewBag.PublishedSurveys = await surveysQuery.CountAsync(s => s.IsPublished);
+            ViewBag.TotalFeedbacks = await feedbacksQuery.CountAsync();
+            ViewBag.NewFeedbacks = await feedbacksQuery.CountAsync(f => f.Status == FeedbackStatus.New);
             ViewBag.TotalUsers = await _db.Users.CountAsync();
             return View();
         }

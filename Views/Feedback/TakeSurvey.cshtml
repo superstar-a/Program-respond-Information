@@ -39,61 +39,85 @@
                 }
 
                 <div class="gg-card">
-                    <div class="gg-card-body">
-                        <div class="gg-question-title">
-                            <span>@q.Text <span class="text-danger">*</span></span>
+                    <div class="card mb-4 shadow-sm border-0">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0 fw-bold">Câu @q.Order: @q.Text <span class="text-danger">*</span></h5>
                         </div>
+                        <div class="card-body">
+                            
+                            @if (!string.IsNullOrEmpty(q.AttachmentPath))
+                            {
+                                <div class="mb-3 d-flex flex-wrap justify-content-center gap-3">
+                                    @foreach (var path in q.AttachmentPath.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        var ext = System.IO.Path.GetExtension(path).ToLower();
+                                        if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
+                                        {
+                                            <a href="@path" target="_blank">
+                                                <img src="@path" alt="Ảnh minh họa" class="img-fluid rounded border" style="max-height: 250px;" />
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a href="@path" download class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-download me-1"></i>Tải @System.IO.Path.GetFileName(path)
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            }
 
-                        @if (q.Type == QLTTYKPH.Models.QuestionType.Text)
-                        {
-                            <input type="text" name="Questions[@i].AnswerText" class="gg-input-text" 
-                                   placeholder="Câu trả lời của bạn" required />
-                        }
-                        else if (q.Type == QLTTYKPH.Models.QuestionType.SingleChoice)
-                        {
-                            <div class="mt-2">
-                                @foreach (var opt in q.OptionList)
-                                {
-                                    <div class="gg-option-row">
-                                        <input class="form-check-input" type="radio" required
-                                               name="Questions[@i].AnswerText" value="@opt" id="q@(i)_@opt" />
-                                        <label class="form-check-label" for="q@(i)_@opt">@opt</label>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else if (q.Type == QLTTYKPH.Models.QuestionType.MultipleChoice)
-                        {
-                            <div class="mt-2">
-                                @for (int k = 0; k < q.OptionList.Count; k++)
-                                {
-                                    var opt = q.OptionList[k];
-                                    <div class="gg-option-row">
-                                        <!-- Note: For MultipleChoice, HTML validation 'required' on checkboxes is tricky, we can omit it or handle via JS -->
-                                        <input class="form-check-input" type="checkbox"
-                                               name="Questions[@i].SelectedOptions" value="@opt" id="q@(i)_@k" />
-                                        <label class="form-check-label" for="q@(i)_@k">@opt</label>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else if (q.Type == QLTTYKPH.Models.QuestionType.Rating)
-                        {
-                            <div class="gg-rating-scale">
-                                @for (int r = 1; r <= 5; r++)
-                                {
-                                    <div class="gg-rating-option">
-                                        <label for="q@(i)_r@r" class="form-check-label mb-2">@r</label>
-                                        <input class="form-check-input" type="radio" required
-                                               name="Questions[@i].AnswerText" value="@r" id="q@(i)_r@r" />
-                                    </div>
-                                }
-                            </div>
-                            <div class="d-flex justify-content-between px-3 text-muted small mt-2">
-                                <span>Rất kém</span>
-                                <span>Rất tốt</span>
-                            </div>
-                        }
+                            @if (q.Type == QLTTYKPH.Models.QuestionType.Text)
+                            {
+                                <input type="text" name="Questions[@i].AnswerText" class="gg-input-text" 
+                                       placeholder="Câu trả lời của bạn" required />
+                            }
+                            else if (q.Type == QLTTYKPH.Models.QuestionType.SingleChoice)
+                            {
+                                <div class="mt-2">
+                                    @foreach (var opt in q.OptionList)
+                                    {
+                                        <div class="gg-option-row">
+                                            <input class="form-check-input" type="radio" required
+                                                   name="Questions[@i].AnswerText" value="@opt" id="q@(i)_@opt" />
+                                            <label class="form-check-label" for="q@(i)_@opt">@opt</label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else if (q.Type == QLTTYKPH.Models.QuestionType.MultipleChoice)
+                            {
+                                <div class="mt-2">
+                                    @for (int k = 0; k < q.OptionList.Count; k++)
+                                    {
+                                        var opt = q.OptionList[k];
+                                        <div class="gg-option-row">
+                                            <!-- Note: For MultipleChoice, HTML validation 'required' on checkboxes is tricky, we can omit it or handle via JS -->
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="Questions[@i].SelectedOptions" value="@opt" id="q@(i)_@k" />
+                                            <label class="form-check-label" for="q@(i)_@k">@opt</label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else if (q.Type == QLTTYKPH.Models.QuestionType.Rating)
+                            {
+                                <div class="gg-rating-scale">
+                                    @for (int r = 1; r <= 5; r++)
+                                    {
+                                        <div class="gg-rating-option">
+                                            <label for="q@(i)_r@r" class="form-check-label mb-2">@r</label>
+                                            <input class="form-check-input" type="radio" required
+                                                   name="Questions[@i].AnswerText" value="@r" id="q@(i)_r@r" />
+                                        </div>
+                                    }
+                                </div>
+                                <div class="d-flex justify-content-between px-3 text-muted small mt-2">
+                                    <span>Rất kém</span>
+                                    <span>Rất tốt</span>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             }

@@ -10,7 +10,7 @@
                 <i class="bi bi-send-fill me-2"></i>Gửi khiếu nại mới
             </div>
             <div class="card-body p-4">
-                <form asp-action="Create" method="post">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-3"></div>
 
@@ -33,10 +33,17 @@
                         <div class="form-text">Khiếu nại của bạn sẽ được gửi trực tiếp đến cán bộ phụ trách phòng ban này.</div>
                     </div>
 
-                    <div class="mb-4">
-                        <label asp-for="Content" class="form-label fw-semibold">Nội dung khiếu nại chi tiết</label>
-                        <textarea asp-for="Content" rows="6" class="form-control" placeholder="Trình bày chi tiết sự việc, lý do khiếu nại..."></textarea>
+                    <div class="mb-3">
+                        <label asp-for="Content" class="form-label fw-semibold">Nội dung chi tiết</label>
+                        <textarea asp-for="Content" class="form-control" rows="5" placeholder="Mô tả chi tiết vấn đề bạn đang gặp phải..."></textarea>
                         <span asp-validation-for="Content" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="attachments" class="form-label fw-semibold">Tệp đính kèm / Ảnh minh chứng (Tối đa 5MB)</label>
+                        <input type="file" name="attachments" id="attachments" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" multiple onchange="previewImages(this, 'imagePreviewContainer')" />
+                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-3 mt-3"></div>
+                        <div class="form-text mt-2">Bạn có thể tải lên ảnh chụp màn hình hoặc tài liệu để làm bằng chứng.</div>
                     </div>
 
                     <div class="mb-4 form-check">
@@ -58,5 +65,34 @@
 </div>
 
 @section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function previewImages(input, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = ''; 
+            const files = input.files;
+            if (!files) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-fluid rounded border shadow-sm';
+                        img.style.maxHeight = '400px'; 
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    const span = document.createElement('span');
+                    span.className = 'badge bg-secondary p-2';
+                    span.textContent = 'Đã chọn tệp: ' + file.name;
+                    container.appendChild(span);
+                }
+            }
+        }
+    </script>
 }

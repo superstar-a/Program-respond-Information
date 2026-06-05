@@ -48,7 +48,17 @@
                     </div>
                     <div class="mb-4">
                         <label asp-for="Department" class="form-label fw-semibold"></label>
-                        <input asp-for="Department" class="form-control" placeholder="Phòng ban (dành cho nhân viên)" />
+                        <select asp-for="Department" class="form-select">
+                            <option value="">-- Chọn phòng ban --</option>
+                            @if (ViewBag.Departments != null)
+                            {
+                                foreach (var d in (List<QLTTYKPH.Models.Department>)ViewBag.Departments)
+                                {
+                                    <option value="@d.Name">@d.Name</option>
+                                }
+                            }
+                        </select>
+                        <div class="form-text">Chỉ dành cho nhân viên</div>
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -61,4 +71,26 @@
         </div>
     </div>
 </div>
-@section Scripts { @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); } }
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        $(document).ready(function () {
+            function toggleFields() {
+                var role = $('#Role').val();
+                if (role == '0') { // Admin
+                    $('#ClassId').prop('disabled', true).val('');
+                    $('#Department').prop('disabled', true).val('');
+                } else if (role == '1') { // Staff
+                    $('#ClassId').prop('disabled', true).val('');
+                    $('#Department').prop('disabled', false);
+                } else if (role == '2') { // Student
+                    $('#ClassId').prop('disabled', false);
+                    $('#Department').prop('disabled', true).val('');
+                }
+            }
+
+            $('#Role').change(toggleFields);
+            toggleFields(); // Call on load
+        });
+    </script>
+}

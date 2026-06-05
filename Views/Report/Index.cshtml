@@ -9,6 +9,56 @@
     </a>
 </div>
 
+<div class="card mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="search" value="@ViewBag.Search" class="form-control form-control-sm" placeholder="Tìm tiêu đề..." />
+            </div>
+            <div class="col-md-2">
+                <select name="categoryId" class="form-select form-select-sm">
+                    <option value="">-- Danh mục --</option>
+                    @foreach (var c in (List<QLTTYKPH.Models.Category>)ViewBag.Categories)
+                    {
+                        <option value="@c.Id" selected="@(ViewBag.CategoryId != null && ViewBag.CategoryId.ToString() == c.Id.ToString())">@c.Name</option>
+                    }
+                </select>
+            </div>
+            @if (ViewBag.IsAdmin != null && ViewBag.IsAdmin)
+            {
+                <div class="col-md-2">
+                    <select name="departmentId" class="form-select form-select-sm">
+                        <option value="">-- Phòng ban --</option>
+                        @foreach (var d in (List<QLTTYKPH.Models.Department>)ViewBag.Departments)
+                        {
+                            <option value="@d.Id" selected="@(ViewBag.DepartmentId != null && ViewBag.DepartmentId.ToString() == d.Id.ToString())">@d.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-md-2">
+                <select name="classId" class="form-select form-select-sm">
+                    <option value="">-- Lớp --</option>
+                    @foreach (var c in (List<QLTTYKPH.Models.Class>)ViewBag.Classes)
+                    {
+                        <option value="@c.Id" selected="@(ViewBag.ClassId != null && ViewBag.ClassId.ToString() == c.Id.ToString())">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="isPublished" class="form-select form-select-sm">
+                    <option value="">-- Trạng thái --</option>
+                    <option value="true" selected="@(ViewBag.IsPublished != null && ViewBag.IsPublished.ToString() == "True")">Đang mở</option>
+                    <option value="false" selected="@(ViewBag.IsPublished != null && ViewBag.IsPublished.ToString() == "False")">Đã đóng</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search me-1"></i>Lọc</button>
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-1">Xóa lọc</a>
+            </div>
+        </form>
+    </div>
+</div>
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
         <div class="stat-card" style="background: linear-gradient(135deg,#1a5f9e,#4db6f5)">

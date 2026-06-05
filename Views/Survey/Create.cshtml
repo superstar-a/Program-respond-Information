@@ -9,7 +9,7 @@
                 <i class="bi bi-plus-circle me-2"></i>Tạo khảo sát mới
             </div>
             <div class="card-body p-4">
-                <form asp-action="Create" method="post">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-3"></div>
                     <div class="mb-3">
@@ -17,9 +17,16 @@
                         <input asp-for="Title" class="form-control" placeholder="Tiêu đề khảo sát..." />
                         <span asp-validation-for="Title" class="text-danger small"></span>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label asp-for="Description" class="form-label fw-semibold"></label>
-                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả mục đích, yêu cầu khảo sát..."></textarea>
+                        <textarea asp-for="Description" rows="4" class="form-control" placeholder="Mô tả chi tiết mục đích khảo sát..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="attachment" class="form-label fw-semibold">Tải lên tệp đính kèm (Ảnh, PDF, Word, Excel - Tối đa 5MB)</label>
+                        <input type="file" name="attachments" id="attachments" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" multiple onchange="previewImages(this, 'imagePreviewContainer')" />
+                        <div class="form-text">Có thể tải lên tài liệu hướng dẫn hoặc hình ảnh liên quan đến đợt khảo sát.</div>
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
@@ -45,12 +52,12 @@
                     </div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label asp-for="StartDate" class="form-label fw-semibold"></label>
+                            <label asp-for="StartDate" class="form-label fw-semibold">Thời gian mở</label>
                             <input asp-for="StartDate" class="form-control" type="datetime-local" />
                             <span asp-validation-for="StartDate" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="EndDate" class="form-label fw-semibold"></label>
+                            <label asp-for="EndDate" class="form-label fw-semibold">Thời gian kết thúc</label>
                             <input asp-for="EndDate" class="form-control" type="datetime-local" />
                             <span asp-validation-for="EndDate" class="text-danger small"></span>
                         </div>
@@ -66,11 +73,11 @@
                         </select>
                         <div class="form-text">Chọn lớp mục tiêu. Để trống = tất cả sinh viên</div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-1"></i>Tạo & thêm câu hỏi
-                        </button>
+                    <div class="d-flex justify-content-end gap-2">
                         <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            Tạo và Tiếp tục <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -93,6 +100,33 @@
                     }
                 });
             }
-        });
+
+        function previewImages(input, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = ''; 
+            const files = input.files;
+            if (!files) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-fluid rounded border shadow-sm';
+                        img.style.maxHeight = '400px'; 
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    const span = document.createElement('span');
+                    span.className = 'badge bg-secondary p-2';
+                    span.textContent = 'Đã chọn tệp: ' + file.name;
+                    container.appendChild(span);
+                }
+            }
+        }
     </script>
 }

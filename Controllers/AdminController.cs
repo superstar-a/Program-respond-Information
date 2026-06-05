@@ -30,7 +30,7 @@ namespace QLTTYKPH.Controllers
             var redirect = RequireAdmin();
             if (redirect != null) return redirect;
 
-            var query = _db.Users.AsQueryable();
+            var query = _db.Users.Include(u => u.Class).AsQueryable();
             if (!string.IsNullOrWhiteSpace(search))
                 query = query.Where(u => u.FullName.Contains(search) || u.Username.Contains(search));
 
@@ -44,6 +44,7 @@ namespace QLTTYKPH.Controllers
             var redirect = RequireAdmin();
             if (redirect != null) return redirect;
             ViewBag.Classes = await _db.Classes.ToListAsync();
+            ViewBag.Departments = await _db.Departments.ToListAsync();
             return View(new User());
         }
 
@@ -57,6 +58,7 @@ namespace QLTTYKPH.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.Classes = await _db.Classes.ToListAsync();
+                ViewBag.Departments = await _db.Departments.ToListAsync();
                 return View(model);
             }
 
@@ -64,7 +66,22 @@ namespace QLTTYKPH.Controllers
             {
                 ModelState.AddModelError("Username", "Tên đăng nhập đã tồn tại");
                 ViewBag.Classes = await _db.Classes.ToListAsync();
+                ViewBag.Departments = await _db.Departments.ToListAsync();
                 return View(model);
+            }
+
+            if (model.Role == UserRole.Student)
+            {
+                model.Department = null;
+            }
+            else if (model.Role == UserRole.Staff)
+            {
+                model.ClassId = null;
+            }
+            else
+            {
+                model.ClassId = null;
+                model.Department = null;
             }
 
             model.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
@@ -160,6 +177,7 @@ namespace QLTTYKPH.Controllers
             var user = await _db.Users.FindAsync(id);
             if (user == null) return NotFound();
             ViewBag.Classes = await _db.Classes.ToListAsync();
+            ViewBag.Departments = await _db.Departments.ToListAsync();
             return View(user);
         }
 
@@ -175,8 +193,23 @@ namespace QLTTYKPH.Controllers
 
             user.FullName = model.FullName;
             user.Role = model.Role;
-            user.ClassId = model.ClassId;
-            user.Department = model.Department;
+            
+            if (model.Role == UserRole.Student)
+            {
+                user.ClassId = model.ClassId;
+                user.Department = null;
+            }
+            else if (model.Role == UserRole.Staff)
+            {
+                user.ClassId = null;
+                user.Department = model.Department;
+            }
+            else
+            {
+                user.ClassId = null;
+                user.Department = null;
+            }
+            
             user.MustChangePassword = mustChangePassword;
 
             if (!string.IsNullOrWhiteSpace(newPassword))
@@ -206,7 +239,8 @@ namespace QLTTYKPH.Controllers
             _db.Users.Remove(user);
             await _db.SaveChangesAsync();
             TempData["Success"] = "Xóa tài khoản thành công!";
-            return RedirectToAction("Users");
+            var referer = Request.Headers["Referer"].ToString();
+            return !string.IsNullOrEmpty(referer) ? Redirect(referer) : RedirectToAction("Users");
         }
 
         // ==================== CATEGORIES ====================
@@ -273,7 +307,8 @@ namespace QLTTYKPH.Controllers
             _db.Categories.Remove(cat);
             await _db.SaveChangesAsync();
             TempData["Success"] = "Xóa danh mục thành công!";
-            return RedirectToAction("Categories");
+            var referer = Request.Headers["Referer"].ToString();
+            return !string.IsNullOrEmpty(referer) ? Redirect(referer) : RedirectToAction("Categories");
         }
 
         // ==================== DEPARTMENTS ====================
@@ -340,7 +375,8 @@ namespace QLTTYKPH.Controllers
             _db.Departments.Remove(dept);
             await _db.SaveChangesAsync();
             TempData["Success"] = "Xóa phòng ban thành công!";
-            return RedirectToAction("Departments");
+            var referer = Request.Headers["Referer"].ToString();
+            return !string.IsNullOrEmpty(referer) ? Redirect(referer) : RedirectToAction("Departments");
         }
 
         // ==================== CLASSES ====================
@@ -408,7 +444,8 @@ namespace QLTTYKPH.Controllers
             _db.Classes.Remove(cls);
             await _db.SaveChangesAsync();
             TempData["Success"] = "Xóa lớp thành công!";
-            return RedirectToAction("Classes");
+            var referer = Request.Headers["Referer"].ToString();
+            return !string.IsNullOrEmpty(referer) ? Redirect(referer) : RedirectToAction("Classes");
         }
     }
 }

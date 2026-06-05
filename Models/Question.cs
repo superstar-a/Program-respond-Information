@@ -26,6 +26,9 @@ namespace QLTTYKPH.Models
         [StringLength(500)]
         public string? Options { get; set; }
 
+        [Display(Name = "Tệp đính kèm / Ảnh minh họa")]
+        public string? AttachmentPath { get; set; }
+
         [Display(Name = "Thứ tự")]
         public int Order { get; set; } = 0;
 

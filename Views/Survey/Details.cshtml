@@ -27,6 +27,36 @@
                 {
                     <p class="text-muted">@Model.Description</p>
                 }
+                
+                @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                {
+                    <div class="mb-3">
+                        <p class="fw-semibold mb-2"><i class="bi bi-paperclip me-1"></i>Tệp đính kèm:</p>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach (var path in Model.AttachmentPath.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                var ext = System.IO.Path.GetExtension(path).ToLower();
+                                if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
+                                {
+                                    <div class="mb-2">
+                                        <a href="@path" target="_blank">
+                                            <img src="@path" alt="Ảnh minh chứng" class="img-fluid rounded border" style="max-height: 200px;" />
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div>
+                                        <a href="@path" download class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-download me-1"></i>Tải @System.IO.Path.GetFileName(path)
+                                        </a>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                }
+                
                 <div class="row g-3 small">
                     <div class="col-sm-6">
                         <span class="text-muted">Danh mục:</span>

@@ -70,6 +70,9 @@ namespace QLTTYKPH.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AttachmentPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -79,6 +82,9 @@ namespace QLTTYKPH.Migrations
 
                     b.Property<bool>("IsAnonymous")
                         .HasColumnType("bit");
+
+                    b.Property<string>("ResolutionAttachmentPath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ResolutionNote")
                         .HasColumnType("nvarchar(max)");
@@ -144,6 +150,9 @@ namespace QLTTYKPH.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AttachmentPath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -235,6 +244,9 @@ namespace QLTTYKPH.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AttachmentPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Options")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -267,6 +279,9 @@ namespace QLTTYKPH.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AttachmentPath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("int");

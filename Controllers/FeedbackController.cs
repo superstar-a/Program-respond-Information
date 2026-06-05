@@ -93,8 +93,10 @@ namespace QLTTYKPH.Controllers
                 Questions = survey.Questions.Select(q => new QuestionAnswerViewModel
                 {
                     QuestionId = q.Id,
+                    Order = q.Order,
                     Text = q.Text,
                     Type = q.Type,
+                    AttachmentPath = q.AttachmentPath,
                     OptionList = string.IsNullOrWhiteSpace(q.Options)
                         ? new List<string>()
                         : q.Options.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(o => o.Trim()).ToList()
@@ -179,7 +181,7 @@ namespace QLTTYKPH.Controllers
         }
 
         // Danh sách tất cả Khảo sát (Staff/Admin Overview)
-        public async Task<IActionResult> All()
+        public async Task<IActionResult> All(string? search)
         {
             if (!SessionHelper.IsLoggedIn(HttpContext.Session))
                 return RedirectToAction("Login", "Account");
@@ -196,6 +198,11 @@ namespace QLTTYKPH.Controllers
                 .Include(s => s.Class)
                 .Include(s => s.Feedbacks)
                 .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(s => s.Title.Contains(search));
+            }
 
             if (!isAdmin && user != null)
             {
@@ -222,6 +229,7 @@ namespace QLTTYKPH.Controllers
                 CompletedFeedbacks = s.Feedbacks.Count(f => f.Status == FeedbackStatus.Completed)
             }).ToList();
 
+            ViewBag.Search = search;
             return View(vmList);
         }
 
@@ -256,7 +264,7 @@ namespace QLTTYKPH.Controllers
 
             var query = _db.Feedbacks
                 .Include(f => f.User)
-                    .ThenInclude(u => u.Class)
+                    .ThenInclude(u => u!.Class)
                 .Include(f => f.Survey)
                 .Where(f => f.SurveyId == surveyId)
                 .AsQueryable();

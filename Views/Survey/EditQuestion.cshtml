@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <form asp-action="EditQuestion" asp-route-id="@Model.Id" method="post" id="questionForm">
+        <form asp-action="EditQuestion" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="questionForm">
             @Html.AntiForgeryToken()
             <input asp-for="SurveyId" type="hidden" />
             
@@ -44,6 +44,37 @@
                                 <option value="3">Phạm vi tuyến tính (1-5)</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="attachment" class="form-label fw-semibold">Tải lên Ảnh / Minh họa cho câu hỏi (Tối đa 5MB)</label>
+                        @if (!string.IsNullOrEmpty(Model.AttachmentPath))
+                        {
+                            <div class="mb-2">
+                                <p class="mb-1 text-muted small">Các tệp/ảnh minh họa hiện tại:</p>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var path in Model.AttachmentPath.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        var ext = System.IO.Path.GetExtension(path).ToLower();
+                                        if (ext == ".jpg" || ext == ".jpeg" || ext == ".png")
+                                        {
+                                            <a href="@path" target="_blank">
+                                                <img src="@path" alt="Ảnh minh họa" class="img-fluid rounded border mb-2" style="max-height: 100px; display: block;" />
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a href="@path" download class="badge bg-info text-dark text-decoration-none p-2 mb-2 d-inline-block">
+                                                <i class="bi bi-download"></i> Tải @System.IO.Path.GetFileName(path)
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                            <div class="form-text">Tải lên tệp mới nếu bạn muốn thay thế tệp cũ. Tệp cũ sẽ bị xóa khỏi dữ liệu câu hỏi.</div>
+                        }
+                        <input type="file" name="attachments" id="attachments" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" multiple onchange="previewImages(this, 'imagePreviewContainer')" />
+                        <div id="imagePreviewContainer" class="d-flex flex-wrap gap-2 mt-2"></div>
                     </div>
 
                     <!-- Hidden textarea for backend compatibility -->
@@ -182,6 +213,34 @@
                 hiddenOptions.value = '';
             }
         });
+
+        function previewImages(input, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = ''; 
+            const files = input.files;
+            if (!files) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'img-fluid rounded border shadow-sm';
+                        img.style.maxHeight = '400px'; 
+                        container.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    const span = document.createElement('span');
+                    span.className = 'badge bg-secondary p-2';
+                    span.textContent = 'Đã chọn tệp: ' + file.name;
+                    container.appendChild(span);
+                }
+            }
+        }
 
         // Initialize
         loadExistingOptions();

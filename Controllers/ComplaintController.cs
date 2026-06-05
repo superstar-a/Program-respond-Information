@@ -9,14 +9,16 @@ namespace QLTTYKPH.Controllers
     public class ComplaintController : Controller
     {
         private readonly AppDbContext _db;
+        private readonly IWebHostEnvironment _env;
 
-        public ComplaintController(AppDbContext db)
+        public ComplaintController(AppDbContext db, IWebHostEnvironment env)
         {
             _db = db;
+            _env = env;
         }
 
         // GET: Complaint
-        public async Task<IActionResult> Index(string? status, int? departmentId)
+        public async Task<IActionResult> Index(string? search, string? status, int? departmentId)
         {
             if (!SessionHelper.IsLoggedIn(HttpContext.Session))
                 return RedirectToAction("Login", "Account");
@@ -29,6 +31,11 @@ namespace QLTTYKPH.Controllers
                     .ThenInclude(u => u!.Class)
                 .Include(c => c.Department)
                 .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(c => c.Title.Contains(search) || (c.User != null && c.User.FullName.Contains(search)));
+            }
 
             if (role == "Student")
             {
@@ -46,7 +53,13 @@ namespace QLTTYKPH.Controllers
                 }
                 else
                 {
-                    query = query.Where(c => c.Department!.Name.ToLower() == staffUser.Department.ToLower());
+                    query = query.Where(c => c.Department != null && c.Department.Name.ToLower() == staffUser.Department.ToLower());
+                    // Cố định filter bộ lọc phòng ban
+                    var staffDept = await _db.Departments.FirstOrDefaultAsync(d => d.Name.ToLower() == staffUser.Department.ToLower());
+                    if (staffDept != null)
+                    {
+                        departmentId = staffDept.Id;
+                    }
                 }
             }
             else if (role == "Admin")
@@ -56,15 +69,17 @@ namespace QLTTYKPH.Controllers
                 {
                     query = query.Where(c => c.DepartmentId == departmentId.Value);
                 }
-                if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ComplaintStatus>(status, out var statusEnum))
-                {
-                    query = query.Where(c => c.Status == statusEnum);
-                }
-
+                
                 ViewBag.Departments = await _db.Departments.ToListAsync();
-                ViewBag.Status = status;
                 ViewBag.DepartmentId = departmentId;
             }
+
+            if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ComplaintStatus>(status, out var statusEnum))
+            {
+                query = query.Where(c => c.Status == statusEnum);
+            }
+            ViewBag.Status = status;
+            ViewBag.Search = search;
 
             var complaints = await query.OrderByDescending(c => c.SubmittedAt).ToListAsync();
             return View(complaints);
@@ -87,7 +102,7 @@ namespace QLTTYKPH.Controllers
         // POST: Complaint/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Complaint model)
+        public async Task<IActionResult> Create(Complaint model, List<IFormFile> attachments)
         {
             if (!SessionHelper.IsLoggedIn(HttpContext.Session))
                 return RedirectToAction("Login", "Account");
@@ -97,6 +112,20 @@ namespace QLTTYKPH.Controllers
 
             if (!ModelState.IsValid)
             {
+                ViewBag.Departments = await _db.Departments.ToListAsync();
+                return View(model);
+            }
+
+            try
+            {
+                if (attachments != null && attachments.Count > 0)
+                {
+                    model.AttachmentPath = await FileHelper.UploadMultipleFilesAsync(attachments, "complaints", _env.WebRootPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("Content", ex.Message);
                 ViewBag.Departments = await _db.Departments.ToListAsync();
                 return View(model);
             }
@@ -156,7 +185,7 @@ namespace QLTTYKPH.Controllers
         // POST: Complaint/Process/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Process(int id, string? resolutionNote, string newStatus)
+        public async Task<IActionResult> Process(int id, string? resolutionNote, string newStatus, List<IFormFile> attachments)
         {
             if (!SessionHelper.IsLoggedIn(HttpContext.Session))
                 return RedirectToAction("Login", "Account");
@@ -188,6 +217,19 @@ namespace QLTTYKPH.Controllers
             if (string.IsNullOrWhiteSpace(resolutionNote))
             {
                 TempData["Error"] = "Vui lòng nhập nội dung phản hồi/giải quyết!";
+                return RedirectToAction("Details", new { id });
+            }
+
+            try
+            {
+                if (attachments != null && attachments.Count > 0)
+                {
+                    complaint.ResolutionAttachmentPath = await FileHelper.UploadMultipleFilesAsync(attachments, "complaints", _env.WebRootPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi tải file minh chứng: " + ex.Message;
                 return RedirectToAction("Details", new { id });
             }
 

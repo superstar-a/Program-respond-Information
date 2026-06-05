@@ -32,6 +32,9 @@ namespace QLTTYKPH.Models
         [ForeignKey("SurveyId")]
         public Survey? Survey { get; set; }
 
+        [Display(Name = "Tệp đính kèm")]
+        public string? AttachmentPath { get; set; }
+
         public ICollection<FeedbackAnswer> FeedbackAnswers { get; set; } = new List<FeedbackAnswer>();
         public ICollection<ProcessingRecord> ProcessingRecords { get; set; } = new List<ProcessingRecord>();
     }

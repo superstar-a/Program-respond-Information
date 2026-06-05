@@ -13,8 +13,10 @@ namespace QLTTYKPH.ViewModels
     public class QuestionAnswerViewModel
     {
         public int QuestionId { get; set; }
+        public int Order { get; set; }
         public string Text { get; set; } = string.Empty;
         public QuestionType Type { get; set; }
+        public string? AttachmentPath { get; set; }
         public List<string> OptionList { get; set; } = new();
         public string? AnswerText { get; set; }
         public List<string> SelectedOptions { get; set; } = new();
